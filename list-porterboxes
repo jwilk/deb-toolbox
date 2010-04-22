@@ -1,0 +1,39 @@
+#!/usr/bin/python
+
+import argparse
+import collections
+import ldap
+
+def get_porterboxes():
+
+    results = collections.defaultdict(list)
+    db = ldap.initialize('ldap://db.debian.org')
+    boxes = db.search_s('dc=debian,dc=org', ldap.SCOPE_SUBTREE, '(&(objectClass=debianServer)(purpose=porterbox))')
+    for box in boxes:
+        box = box[1]
+        [status] = box.get('status', [''])
+        [access] = box.get('access', [''])
+        if status.startswith('down') or access.startswith('lockdown') or access.startswith('restrict'):
+            continue
+        [architecture] = box['architecture']
+        [hostname] = box['hostname']
+        results[architecture].append(hostname)
+    return results
+
+def main():
+    oparser = argparse.ArgumentParser()
+    oparser.add_argument('-u', '--unique', action='store_true')
+    options = oparser.parse_args()
+
+    porterboxes = get_porterboxes()
+
+    for architecture, hostnames in sorted(porterboxes.iteritems()):
+        if options.unique:
+            hostnames = [hostnames[0]]
+        for hostname in hostnames:
+            print '%(architecture)s\t%(hostname)s' % locals()
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
