@@ -4,6 +4,8 @@ import argparse
 import collections
 import ldap
 
+exceptions = set(['crest.debian.net'])
+
 def get_porterboxes():
 
     results = collections.defaultdict(list)
@@ -17,6 +19,8 @@ def get_porterboxes():
             continue
         [architecture] = box['architecture']
         [hostname] = box['hostname']
+        if hostname in exceptions:
+            continue
         results[architecture].append(hostname)
     return results
 
