@@ -1,0 +1,54 @@
+#!/bin/sh
+
+set -e
+
+tmpdir=`mktemp -d`
+
+cat > "$tmpdir/types" <<EOF
+char
+signed char
+unsigned char
+short
+unsigned short
+int
+unsigned int
+long
+unsigned long
+long long
+unsigned long long
+uint8_t
+uint16_t
+uint32_t
+uint64_t
+int8_t
+int16_t
+int32_t
+int64_t
+size_t
+ssize_t
+ptrdiff_t
+intptr_t
+off_t
+off64_t
+float
+double
+long double
+void *
+va_list
+EOF
+
+(
+  cat <<EOF
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <sys/types.h>
+EOF
+  nl -n rz "$tmpdir/types" | sed -r -e 's/ *([0-9]+)\t(.*)/void f__\1__(\2) { return; }/'
+) | g++ -W -Wall -c -x c++ - -o "$tmpdir/tmp.o"
+nm "$tmpdir/tmp.o" \
+| grep ' T ' \
+| sort \
+| sed -r -e 's/.*f__([0-9]+)__//' \
+| paste "$tmpdir/types" -
+rm -rf "$tmpdir"
