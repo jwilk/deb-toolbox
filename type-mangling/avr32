@@ -1,0 +1,30 @@
+char	c
+signed char	a
+unsigned char	h
+short	s
+unsigned short	t
+int	i
+unsigned int	j
+long	l
+unsigned long	m
+long long	x
+unsigned long long	y
+uint8_t	h
+uint16_t	t
+uint32_t	j
+uint64_t	y
+int8_t	a
+int16_t	s
+int32_t	i
+int64_t	x
+size_t	m
+ssize_t	l
+ptrdiff_t	l
+intptr_t	i
+off_t	l
+off64_t	x
+float	f
+double	d
+long double	e
+void *	Pv
+va_list	Pv
