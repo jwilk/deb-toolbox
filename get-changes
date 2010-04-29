@@ -54,12 +54,12 @@ def download_changes(source, version=None):
             break
     else:
         raise Exception('no such version')
-    changes_url = etree.fromstring(link).get('href')
+    changes_url = etree.fromstring(link.encode('ASCII', 'replace')).get('href')
     changes = wget(changes_url).read()
     changes = _pre(changes).group(1)
-    changes = etree.fromstring(changes).text
+    changes = etree.fromstring(changes).text.encode('UTF-8')
     with file('%(source)s_%(version)s_snapshot.changes' % locals(), 'w') as out_file:
-        out_file.write(changes.encode('UTF-8'))
+        out_file.write(changes)
     changes = stringio.StringIO(changes)
     changes = deb822.Changes.gpg_stripped_paragraph(changes)
     [changes] = deb822.Changes.iter_paragraphs(changes)
