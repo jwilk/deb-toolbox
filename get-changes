@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2010 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+from __future__ import with_statement
+
+import argparse
+import contextlib
+import re
+import urllib2
+import cStringIO as stringio
+import sys
+from xml.etree import cElementTree as etree
+
+from debian import deb822
+
+block_size = 0x10000
+
+_accepted = re.compile('Accepted ([0-9][0-9a-z.:~+-]*) in').match
+_pre = re.compile('<!--X-Body-of-Message-->\n(.*)\n<!--X-Body-of-Message-End-->', re.DOTALL).search
+
+def wget(url):
+    print >>sys.stderr, '+', url
+    return urllib2.urlopen(url)
+
+def download_file(changes_item):
+    url = 'http://snapshot.debian.org/file/%s' % changes_item['sha1']
+    with contextlib.closing(wget(url)) as in_file:
+        with open(changes_item['name'], 'wb') as out_file:
+            while 1:
+                block = in_file.read(block_size)
+                if not block:
+                    break
+                out_file.write(block)
+
+def download_changes(source, version=None):
+    prefix_length = 1 if not source.startswith('lib') else 4
+    prefix = source[:prefix_length]
+    news_url = 'http://packages.qa.debian.org/%(prefix)s/%(source)s/news.rss20.xml' % locals()
+    news = wget(news_url)
+    news = etree.parse(news)
+    for item in news.getiterator('item'):
+        title = item.find('title').text
+        link = item.find('description').text
+        m = _accepted(title)
+        if m is None:
+            continue
+        version = version or m.group(1)
+        if version == m.group(1):
+            break
+    else:
+        raise Exception('no such version')
+    changes_url = etree.fromstring(link).get('href')
+    changes = wget(changes_url).read()
+    changes = _pre(changes).group(1)
+    changes = etree.fromstring(changes).text
+    with file('%(source)s_%(version)s_snapshot.changes' % locals(), 'w') as out_file:
+        out_file.write(changes.encode('UTF-8'))
+    changes = stringio.StringIO(changes)
+    changes = deb822.Changes.gpg_stripped_paragraph(changes)
+    [changes] = deb822.Changes.iter_paragraphs(changes)
+    for item in changes['Checksums-Sha1']:
+        download_file(item)
+
+def main():
+    oparser = argparse.ArgumentParser()
+    oparser.add_argument('source')
+    oparser.add_argument('version', nargs='?')
+    options = oparser.parse_args()
+    download_changes(options.source, options.version)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
