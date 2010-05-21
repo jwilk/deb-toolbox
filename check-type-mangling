@@ -33,6 +33,7 @@ size_t
 ssize_t
 ptrdiff_t
 intptr_t
+uintptr_t
 off_t
 off64_t
 float
