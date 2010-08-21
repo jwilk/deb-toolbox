@@ -1,0 +1,115 @@
+#!/usr/bin/python3
+# encoding=UTF-8
+
+# Copyright © 2010 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import sys
+import os
+import collections
+import subprocess
+import re
+
+bitbucket = open(os.devnull, 'w')
+
+def arch_string_key(s):
+    return -len(s), s
+
+class Arch(object):
+
+    _cache = {}
+
+    def __new__(cls, name):
+        try:
+            return Arch._cache[name]
+        except KeyError:
+            return object.__new__(cls)
+
+    def __init__(self, name):
+        self._name = name
+        dpkg = subprocess.Popen(
+            ['dpkg-architecture', '-a{}'.format(name), '-l'],
+            stdout=subprocess.PIPE,
+            stderr=bitbucket,
+        )
+        try:
+            lines = (
+                line.decode('ASCII').rstrip().split('=', 1)[1]
+                for line in dpkg.stdout
+            )
+            lines = (
+                line for line in lines
+                if not line.isdigit()
+            )
+            lines = sorted(lines, key=arch_string_key)
+        finally:
+            rc = dpkg.wait()
+            if rc != 0:
+                raise subprocess.CalledProcessError(rc, 'dpkg-architecture')
+        self._re = re.compile(r'\b({})\b'.format('|'.join(re.escape(x) for x in lines)).encode('ASCII'))
+
+    def replace(self, s):
+        return re.sub(self._re, b'*', s)
+
+    def __str__(self):
+        return self._name
+
+def new_package_dict():
+    return collections.defaultdict(set)
+
+data = collections.defaultdict(new_package_dict)
+
+for filename in sys.argv[1:]:
+    basename, _ = os.path.splitext(filename)
+    arch = Arch(basename.split('-', 1)[1])
+    print('Reading {}'.format(filename), file=sys.stderr)
+    zcat = subprocess.Popen(
+        ['zcat', '--', filename],
+        stdout=subprocess.PIPE,
+        stderr=bitbucket,
+    )
+    try:
+        skip = True
+        for line in zcat.stdout:
+            if skip:
+                if line.startswith(b'FILE'):
+                    skip = False
+                continue
+            filename, packages = line.rsplit(None, 1)
+            filename = arch.replace(filename)
+            packages = packages.decode('ASCII').split(',')
+            for package in packages:
+                package = package.rsplit('/', 1)[-1]
+                data[package][filename].add(arch)
+    finally:
+        rc = zcat.wait()
+        if rc != 0:
+            raise subprocess.CalledProcessError(rc, 'zcat')
+
+print('Writing results', file=sys.stderr)
+
+n_archs = len(sys.argv) - 1
+for package, package_data in sorted(data.items()):
+    groups = collections.defaultdict(list)
+    for filename, archs in package_data.items():
+        groups[frozenset(archs)] += [filename]
+    if len(groups) == 1:
+        [archs] = groups.keys()
+        if len(archs) == n_archs:
+            continue
+        archs_descr = ','.join(map(str, archs))
+        print('{}/{}'.format(package, archs_descr))
+        print()
+    else:
+        for archs, filenames in groups.items():
+            if len(archs) == n_archs:
+                continue
+            archs_descr = ','.join(map(str, archs))
+            print('{}/{}'.format(package, archs_descr))
+            for filename in sorted(filenames):
+                print('  {}'.format(repr(filename)[2:-1]))
+        print()
+
+# vim:ts=4 sw=4 et
