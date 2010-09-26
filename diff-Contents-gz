@@ -41,7 +41,7 @@ class Arch(object):
             )
             lines = (
                 line for line in lines
-                if not line.isdigit()
+                if not line.isdigit() and not line in ('big', 'little')
             )
             lines = sorted(lines, key=arch_string_key)
         finally:
