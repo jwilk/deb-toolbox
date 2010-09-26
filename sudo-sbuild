@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+# encoding=UTF-8
+
+# Copyright © 2010 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+'''
+A wrapper over sbuild that allow it to be run with another user (named
+"sbuild") via sudo.
+'''
+import glob
+import os
+import shutil
+import subprocess as ipc
+import sys
+import tempfile
+
+cwd = os.getcwd()
+sbuild_args = ['sudo', '-u', 'sbuild', '--', '/usr/bin/sbuild']
+tmpdir = tempfile.mkdtemp(prefix='sbuild.')
+try:
+    ipc.check_call(['setfacl', '-m', 'u:sbuild:rwx', '--', tmpdir])
+    for arg in sys.argv[1:]:
+        if arg.endswith('.dsc'):
+            new_arg = os.path.join(tmpdir, os.path.basename(arg))
+            ipc.check_call(['dcmd', 'cp', '-v', '--', arg, tmpdir])
+            arg = new_arg
+        sbuild_args += [arg]
+    os.chdir(tmpdir)
+    for filename in glob.glob('*'):
+        os.chmod(filename, 0o644)
+    ipc.check_call(['ls', '-lR'])
+    ipc.check_call(sbuild_args)
+    ipc.check_call(['cp', '-v', '-d', '-f', '-t', cwd, '--'] + glob.glob('*'))
+finally:
+    shutil.rmtree(tmpdir)
+
+# vim:ts=4 sw=4 et
