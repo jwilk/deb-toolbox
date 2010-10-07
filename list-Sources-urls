@@ -1,0 +1,41 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2009, 2010 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+'''
+Generate URLs from Sources files.
+'''
+
+from __future__ import with_statement
+
+import argparse
+import sys
+
+from debian import deb822
+
+default_mirror = 'http://cdn.debian.net/debian/'
+
+def list_diffs(mirror, indices):
+    for index_filename in indices:
+        with file(index_filename) as index:
+            for pkg in deb822.Packages.iter_paragraphs(index):
+                directory = mirror + pkg['directory'] + '/'
+                filenames = (entry.split()[2] for entry in pkg['files'].split('\n') if entry)
+                for filename in filenames:
+                    print directory + filename
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--mirror', default=default_mirror, help='mirror to download files from (default: %s)' % default_mirror)
+    parser.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
+    options = parser.parse_args()
+    list_diffs(options.mirror, options.indices)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
