@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import logging
+import os
+import pipes
+import subprocess as ipc
+import sys
+import xml.etree.cElementTree as etree
+
+file_extensions = {
+    'tar.bz2': 'tar.bz2',
+    'tar.gz': 'tar.gz',
+    'tar.lz': 'tar.lzma',
+    'tar.xz': 'tar.xz',
+    'tbz2': 'tar.bz2',
+    'tgz': 'tar.gz',
+    'tlz': 'tar.lzma',
+    'txz': 'tar.xz',
+    'zip': 'zip',
+}
+
+def quote_commandline(commandline):
+    return ' '.join(pipes.quote(s) for s in commandline)
+
+def find_extension(filename):
+    for ext_in, ext_out in file_extensions.iteritems():
+        if filename.endswith('.' + ext_in):
+            return ext_out
+
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+
+argparser = argparse.ArgumentParser()
+argparser.add_argument('-F', '--file', default='debian/watch', help='use this watch file')
+argparser.add_argument('-t', '--target-directory', default='.', help='download files to this directory')
+argparser.add_argument('--svn', action='store_const', const='../tarballs/', dest='target_directory', help='alias for "--target-directory ../tarballs/"')
+argparser.add_argument('-r', '--repack-to', nargs='+', metavar='EXT', default=[], help='repack to .orig.tar to the one of the specified file formats')
+argparser.add_argument('-f', '--force', action='store_true', help='overwrite an existing .orig.tar')
+argparser.add_argument('-v', '--version', help='download this version')
+argparser.add_argument('-c', '--current-version', action='store_true', help='download current version')
+argparser.add_argument('--insecure', '--no-check-certificate', action='store_true', help='''don't validate the server's certificate''')
+argparser.add_argument('-n', '--no-act', '--dry-run', action='store_true', help='''don't do anything''')
+options = argparser.parse_args()
+
+if options.repack_to:
+    raise NotImplementedError('--repack-to is not yet implemented')
+if options.no_act:
+    raise NotImplementedError('--no-act is not yet implemented')
+
+os.stat(options.file)
+
+commandline = ['/usr/bin/uscan', '--no-conf', '--watchfile', options.file, '--dehs']
+if options.current_version:
+    commandline += ['--download-current-version']
+elif options.version is not None:
+    commandline += ['--download-version', options.version]
+logging.debug('+ %s', quote_commandline(commandline))
+pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
+dehs = etree.parse(pipe.stdout)
+pipe.wait()
+
+package = dehs.find('package').text
+
+upstream_version = dehs.find('upstream-version').text
+
+upstream_url = dehs.find('upstream-url').text
+
+extension = find_extension(upstream_url)
+if extension is None:
+    logging.warning('Unknown file extension; using tar.gz as a wild guess')
+    extension = 'tar.gz'
+
+target = '{package}_{version}.orig.{extension}'.format(
+    package=package,
+    version=upstream_version,
+    extension=extension,
+)
+try:
+    os.makedirs(options.target_directory)
+except OSError:
+    pass
+target = os.path.join(options.target_directory, target)
+logging.debug('%s --> %s', upstream_url, target)
+if os.path.exists(target) and os.path.getsize(target) > 0:
+    if not options.force:
+        logging.info('%s is already there; use --force to overwrite.', target)
+        sys.exit(0)
+
+commandline = ['wget', '-O', target, '--', upstream_url]
+if options.insecure:
+    commandline[1:1] = ['--no-check-certificate']
+logging.debug('+ %s', quote_commandline(commandline))
+pipe = ipc.Popen(commandline)
+pipe.wait()
+
+# vim:ts=4 sw=4 et
