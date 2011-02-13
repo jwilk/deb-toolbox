@@ -14,6 +14,8 @@ import subprocess as ipc
 import sys
 import xml.etree.cElementTree as etree
 
+import debian.changelog
+
 file_extensions = {
     'tar.bz2': 'tar.bz2',
     'tar.gz': 'tar.gz',
@@ -57,8 +59,10 @@ os.stat(options.file)
 
 commandline = ['/usr/bin/uscan', '--no-conf', '--watchfile', options.file, '--dehs']
 if options.current_version:
-    commandline += ['--download-current-version']
-elif options.version is not None:
+    with open('debian/changelog') as file:
+        changelog = debian.changelog.Changelog(file)
+    options.version = changelog.upstream_version
+if options.version is not None:
     commandline += ['--download-version', options.version]
 logging.debug('+ %s', quote_commandline(commandline))
 pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
