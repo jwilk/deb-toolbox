@@ -51,6 +51,8 @@ class Arch(object):
         self._re = re.compile(r'\b({})\b'.format('|'.join(re.escape(x) for x in lines)).encode('ASCII'))
 
     def replace(self, s):
+        return s
+        # FIXME: it used to be:
         return re.sub(self._re, b'*', s)
 
     def __str__(self):
