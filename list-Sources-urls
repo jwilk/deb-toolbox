@@ -19,7 +19,7 @@ from debian import deb822
 
 default_mirror = 'http://cdn.debian.net/debian/'
 
-def list_diffs(mirror, indices):
+def print_urls(mirror, indices):
     for index_filename in indices:
         with file(index_filename) as index:
             for pkg in deb822.Packages.iter_paragraphs(index):
@@ -33,7 +33,7 @@ def main():
     parser.add_argument('--mirror', default=default_mirror, help='mirror to download files from (default: %s)' % default_mirror)
     parser.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
     options = parser.parse_args()
-    list_diffs(options.mirror, options.indices)
+    print_urls(options.mirror, options.indices)
 
 if __name__ == '__main__':
     main()
