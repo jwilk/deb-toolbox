@@ -1,0 +1,67 @@
+#!/usr/bin/python3
+
+# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import os
+import pwd
+import sys
+import urllib.parse
+import xmlrpc.client
+
+class PasteError(RuntimeError):
+    pass
+
+def get_default_username():
+    return pwd.getpwuid(os.getuid()).pw_name
+
+class PasteServer(xmlrpc.client.ServerProxy):
+
+    def call(self, method, *args):
+        response = getattr(self, 'paste.' + method)(*args)
+        if response['rc'] != 0:
+            raise PasteError(response['statusmessage'])
+        return response
+
+def do_get_languages(server, options):
+    response = server.call('getLanguages')
+    for language in sorted(response['langs']):
+        print(language)
+
+def do_create_paste(server, options):
+    text = options.text
+    if text is None:
+        text = sys.stdin.read()
+    response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(options.hidden)))
+    base_url = response['base_url']
+    path = str(response['id'])
+    if response['hidden']:
+        path = 'hidden/{}'.format(path)
+    print(urllib.parse.urljoin(base_url, path))
+
+def main():
+    default_server = 'http://paste.debian.net/server.pl'
+    default_username = get_default_username()
+    default_expire = 2 * 24 * 60
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help='XML-RPC server (default: {})'.format(default_server))
+    parser.add_argument('-u', '--username', default=default_username, help='name of the submitter (default: {})'.format(default_username))
+    parser.add_argument('-l', '--language', default='text', help='highlighting language')
+    parser.add_argument('-e', '--expire', type=int, default=default_expire, help='time in seconds from now when the entry should expire (default: {})')
+    parser.add_argument('--hidden', action='store_true', help='hide from frontpage')
+    parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
+    parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
+    options = parser.parse_args()
+    server = PasteServer(options.url)
+    if options.list_languages:
+        do_get_languages(server, options)
+    else:
+        do_create_paste(server, options)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
