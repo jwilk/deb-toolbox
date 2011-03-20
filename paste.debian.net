@@ -36,7 +36,7 @@ def do_create_paste(server, options):
     if text is None:
         text = sys.stdin.read()
     response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(options.hidden)))
-    base_url = response['base_url']
+    base_url = urllib.parse.urljoin(options.url, response['base_url'])
     path = str(response['id'])
     if response['hidden']:
         path = 'hidden/{}'.format(path)
