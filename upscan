@@ -57,7 +57,7 @@ if options.no_act:
 
 os.stat(options.file)
 
-commandline = ['/usr/bin/uscan', '--no-conf', '--watchfile', options.file, '--dehs']
+commandline = ['/usr/bin/uscan', '--no-conf', '--watchfile', options.file, '--report', '--dehs']
 if options.current_version:
     with open('debian/changelog') as file:
         changelog = debian.changelog.Changelog(file)
