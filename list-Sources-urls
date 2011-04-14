@@ -10,8 +10,6 @@
 Generate URLs from Sources files.
 '''
 
-from __future__ import with_statement
-
 import argparse
 import sys
 
