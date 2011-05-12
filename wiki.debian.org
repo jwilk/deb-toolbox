@@ -1,0 +1,113 @@
+#!/usr/bin/python
+
+import getpass
+import httplib
+import netrc
+import os
+import re
+import shutil
+import socket
+import ssl
+import sys
+import tempfile
+import urllib
+
+class VerifiedHTTPSConnection(httplib.HTTPSConnection):
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+        self.sock = ssl.wrap_socket(sock,
+            self.key_file,
+            self.cert_file,
+            cert_reqs=ssl.CERT_REQUIRED,
+            ca_certs='/etc/ssl/certs/ca-certificates.crt'
+        )
+        match_hostname(self.sock.getpeercert(), self.host)
+
+httplib.HTTPS._connection_class = VerifiedHTTPSConnection
+
+class CertificateError(ValueError):
+    pass
+
+def _dnsname_to_pat(dn):
+    pats = []
+    for frag in dn.split(r'.'):
+        if frag == '*':
+            # When '*' is a fragment by itself, it matches a non-empty dotless
+            # fragment.
+            pats.append('[^.]+')
+        else:
+            # Otherwise, '*' matches any dotless fragment.
+            frag = re.escape(frag)
+            pats.append(frag.replace(r'\*', '[^.]*'))
+    return re.compile(r'\A' + r'\.'.join(pats) + r'\Z', re.IGNORECASE)
+
+def match_hostname(cert, hostname):
+    '''Verify that *cert* (in decoded format as returned by
+    SSLSocket.getpeercert()) matches the *hostname*.  RFC 2818 rules
+    are mostly followed, but IP addresses are not accepted for *hostname*.
+
+    CertificateError is raised on failure. On success, the function
+    returns nothing.
+    '''
+    if not cert:
+        raise ValueError('empty or no certificate')
+    dnsnames = []
+    san = cert.get('subjectAltName', ())
+    for key, value in san:
+        if key == 'DNS':
+            if _dnsname_to_pat(value).match(hostname):
+                return
+            dnsnames.append(value)
+    if not san:
+        # The subject is only checked when subjectAltName is empty
+        for sub in cert.get('subject', ()):
+            for key, value in sub:
+                # XXX according to RFC 2818, the most specific Common Name
+                # must be used.
+                if key == 'commonName':
+                    if _dnsname_to_pat(value).match(hostname):
+                        return
+                    dnsnames.append(value)
+    if len(dnsnames) > 1:
+        raise CertificateError('hostname %r doesn\'t match either of %s' % (hostname, ', '.join(map(repr, dnsnames))))
+    elif len(dnsnames) == 1:
+        raise CertificateError('hostname %r doesn\'t match %r' % (hostname, dnsnames[0]))
+    else:
+        raise CertificateError('no appropriate commonName or subjectAltName fields were found')
+
+if __name__ == '__main__':
+
+    try:
+        netrc_user, _, netrc_password = netrc.netrc().authenticators('wiki.debian.org')
+    except TypeError:
+        print >>sys.stderr, 'No entry for wiki.debian.org found in ~/.netrc'
+        sys.exit(1)
+
+    def get_user(moinurl, user=netrc_user):
+        return user
+
+    def get_password(user, password=netrc_password):
+        return password
+
+    for i, arg in enumerate(sys.argv):
+        if i == 0:
+            continue
+        if arg.startswith('http:'):
+            sys.argv[i] = 'https:' + arg[5:]
+        elif len(arg) > 0 and (arg[0] == '/' or arg[0].isalpha()):
+            sys.argv[i] = urllib.basejoin('https://wiki.debian.org/', arg)
+    tmpdir = tempfile.mkdtemp(prefix='wiki.debian.org.')
+    try:
+        os.symlink('/usr/bin/editmoin', os.path.join(tmpdir, 'editmoin.py'))
+        sys.path[0] = tmpdir
+        import editmoin
+        editmoin.get_user = get_user
+        getpass.getpass = get_password
+        editmoin.main()
+    finally:
+        shutil.rmtree(tmpdir)
+
+# vim:ts=4 sw=4 et
