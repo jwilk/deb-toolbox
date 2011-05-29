@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import sys
+
+import debian.deb822 as deb822
+
+fields = [
+    'Depends', 'Recommends', 'Suggests', 'Enhances',
+    'Conflicts', 'Breaks', 'Replaces',
+]
+
+alt_all = object()
+alt_every = object()
+alt_first = object()
+
+def parse(file, options):
+    for pkg in deb822.Packages.iter_paragraphs(file):
+        pkg_name = pkg['Package']
+        for field in fields:
+            try:
+                relations = pkg[field]
+            except LookupError:
+                continue
+            relations = deb822.PkgRelation.parse_relations(relations)
+            for relation in relations:
+                if options.ignore_versions:
+                    for subrelation in relation:
+                        subrelation['version'] = None
+                if options.alternatives is alt_all:
+                    value = deb822.PkgRelation.str([relation])
+                    print '{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=value)
+                else:
+                    for subrelation in relation:
+                        subvalue = deb822.PkgRelation.str([[subrelation]])
+                        print '{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=subvalue)
+                        if options.alternatives is alt_first:
+                            break
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ignore-versions', action='store_true')
+    parser.set_defaults(alternatives=alt_all)
+    parser.add_argument('--every-alternative', action='store_const', const=alt_every, dest='alternatives')
+    parser.add_argument('--first-alternative', action='store_const', const=alt_first, dest='alternatives')
+    options = parser.parse_args()
+    parse(sys.stdin, options)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
