@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2009, 2010 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+'''
+Generate URLs from Sources files.
+'''
+
+import argparse
+import sys
+
+from debian import deb822
+
+default_mirror = 'http://cdn.debian.net/debian/'
+
+def print_urls(mirror, indices, hashfn=None):
+    if hashfn is None:
+        output_format = '{filename}'
+    else:
+        output_format = '{hash}  {filename}'
+    if hashfn is None or hashfn == 'md5':
+        field = 'Files'
+    elif hashfn in ('sha1', 'sha256'):
+        field = 'Checksums-{0}'.format(hashfn)
+    else:
+        raise ValueError
+    for index_filename in indices:
+        with file(index_filename) as index:
+            for pkg in deb822.Packages.iter_paragraphs(index):
+                directory = mirror + pkg.get('directory', '') + '/'
+                filenames = []
+                try:
+                    entries = pkg[field]
+                except KeyError:
+                    print >>sys.stderr, 'Skipping: {0}'.format(pkg['package'])
+                    continue
+                for entry in entries.splitlines():
+                    if not entry:
+                        continue
+                    hashsum, size, filename = entry.split()
+                    print output_format.format(filename=filename, hash=hashsum)
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--mirror', default=default_mirror, help='mirror to download files from (default: %s)' % default_mirror)
+    parser.add_argument('--hash', choices=('md5', 'sha1', 'sha256'), help='output checkshum')
+    parser.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
+    options = parser.parse_args()
+    print_urls(options.mirror, options.indices, options.hash)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
