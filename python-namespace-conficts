@@ -12,13 +12,13 @@ import sys
 
 pymodule_match = re.compile('''
     (?:
-        (?P<pyshared>
+        (?P<pymodules>
             usr/lib/pyshared/python2[.][0-9]+ | # python-support >= 0.90
             usr/share/pyshared | # python-support >= 0.90
             usr/lib/python-support/[^/]+/python2[.][0-9]+/ | # python-support < 0.90
             usr/share/python-support/[^/]+/ # python-support < 0.90
         ) |
-        (?P<sitepkgs>
+        (?P<site_pkgs>
             usr/lib/python2[.][0-9]+/(?:site|dist)-packages
         )
     )
@@ -44,19 +44,19 @@ def main():
             if match is None:
                 continue
             module = match.group('module')
-            (pyshared_packages, sitepkgs_packages) = pymodules[module]
-            if match.group('pyshared'):
-                pyshared_packages.update(packages)
-            elif match.group('sitepkgs'):
-                sitepkgs_packages.update(packages)
-    for module, (pyshared_packages, sitepkgs_packages) in pymodules.iteritems():
-        sitepkgs_packages |= pyshared_packages & pycentral_packages
-        pyshared_packages -= pycentral_packages
-        pyshared_packages -= sitepkgs_packages
-        if pyshared_packages and sitepkgs_packages:
+            (pymodules_packages, site_pkgs_packages) = pymodules[module]
+            if match.group('pymodules'):
+                pymodules_packages.update(packages)
+            elif match.group('site_pkgs'):
+                site_pkgs_packages.update(packages)
+    for module, (pymodules_packages, site_pkgs_packages) in pymodules.iteritems():
+        site_pkgs_packages |= pymodules_packages & pycentral_packages
+        pymodules_packages -= pycentral_packages
+        pymodules_packages -= site_pkgs_packages
+        if pymodules_packages and site_pkgs_packages:
             print '%s:' % module
-            print '  pyshared: [%s]' % ', '.join(pyshared_packages)
-            print '  sitepkgs: [%s]' % ', '.join(sitepkgs_packages)
+            print '  pymodules: [%s]' % ', '.join(pymodules_packages)
+            print '  site-pkgs: [%s]' % ', '.join(site_pkgs_packages)
             print
 
 if __name__ == '__main__':
