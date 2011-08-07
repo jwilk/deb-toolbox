@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import collections
+import re
+import sys
+
+pymodule_match = re.compile('''
+    (?:
+        (?P<pyshared>
+            usr/lib/pyshared/python2[.][0-9]+ | # python-support >= 0.90
+            usr/share/pyshared | # python-support >= 0.90
+            usr/lib/python-support/[^/]+/python2[.][0-9]+/ | # python-support < 0.90
+            usr/share/python-support/[^/]+/ # python-support < 0.90
+        ) |
+        (?P<sitepkgs>
+            usr/lib/python2[.][0-9]+/(?:site|dist)-packages
+        )
+    )
+    /
+    (?P<module> [^/]* )
+    /
+
+''', re.VERBOSE).match
+
+def main():
+    pycentral_packages = set()
+    pymodules = collections.defaultdict(lambda: (set(), set()))
+    for line in sys.stdin:
+        if line.startswith('FILE'):
+            break
+    for line in sys.stdin:
+        filename, packages = line.rstrip().rsplit(None, 1)
+        packages = [pkg.split('/')[-1] for pkg in packages.split(',')]
+        if filename.startswith('usr/share/pyshared-data/'):
+            pycentral_packages.update(packages)
+        else:
+            match = pymodule_match(filename)
+            if match is None:
+                continue
+            module = match.group('module')
+            (pyshared_packages, sitepkgs_packages) = pymodules[module]
+            if match.group('pyshared'):
+                pyshared_packages.update(packages)
+            elif match.group('sitepkgs'):
+                sitepkgs_packages.update(packages)
+    for module, (pyshared_packages, sitepkgs_packages) in pymodules.iteritems():
+        pyshared_packages.difference_update(pycentral_packages)
+        pyshared_packages.difference_update(sitepkgs_packages)
+        if pyshared_packages and sitepkgs_packages:
+            print '%s:' % module
+            print '  pyshared: [%s]' % ', '.join(pyshared_packages)
+            print '  sitepkgs: [%s]' % ', '.join(sitepkgs_packages)
+            print
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
