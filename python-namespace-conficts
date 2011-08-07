@@ -23,7 +23,7 @@ pymodule_match = re.compile('''
         )
     )
     /
-    (?P<module> [^/]* )
+    (?P<module> \w+ )
     /
 
 ''', re.VERBOSE).match
