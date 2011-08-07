@@ -50,8 +50,9 @@ def main():
             elif match.group('sitepkgs'):
                 sitepkgs_packages.update(packages)
     for module, (pyshared_packages, sitepkgs_packages) in pymodules.iteritems():
-        pyshared_packages.difference_update(pycentral_packages)
-        pyshared_packages.difference_update(sitepkgs_packages)
+        sitepkgs_packages |= pyshared_packages & pycentral_packages
+        pyshared_packages -= pycentral_packages
+        pyshared_packages -= sitepkgs_packages
         if pyshared_packages and sitepkgs_packages:
             print '%s:' % module
             print '  pyshared: [%s]' % ', '.join(pyshared_packages)
