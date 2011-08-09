@@ -15,8 +15,8 @@ pymodule_match = re.compile('''
         (?P<pymodules>
             usr/lib/pyshared/python2[.][0-9]+ | # python-support >= 0.90
             usr/share/pyshared | # python-support >= 0.90
-            usr/lib/python-support/[^/]+/python2[.][0-9]+/ | # python-support < 0.90
-            usr/share/python-support/[^/]+/ # python-support < 0.90
+            usr/lib/python-support/[^/]+/python2[.][0-9]+ | # python-support < 0.90
+            usr/share/python-support/[^/]+ # python-support < 0.90
         ) |
         (?P<site_pkgs>
             usr/lib/python2[.][0-9]+/(?:site|dist)-packages
