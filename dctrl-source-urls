@@ -19,7 +19,7 @@ default_mirror = 'http://cdn.debian.net/debian/'
 
 def print_urls(mirror, indices, hashfn=None):
     if hashfn is None:
-        output_format = '{filename}'
+        output_format = '{directory}{filename}'
     else:
         output_format = '{hash}  {filename}'
     if hashfn is None or hashfn == 'md5':
@@ -42,7 +42,7 @@ def print_urls(mirror, indices, hashfn=None):
                     if not entry:
                         continue
                     hashsum, size, filename = entry.split()
-                    print output_format.format(filename=filename, hash=hashsum)
+                    print output_format.format(directory=directory, filename=filename, hash=hashsum)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
