@@ -1,0 +1,121 @@
+#!/usr/bin/python
+
+'''
+apt-file replacement with Tokyo Cabinet backend
+'''
+
+import argparse
+import collections
+import os
+import re
+import subprocess as ipc
+
+import apt_pkg
+import pytc
+import xdg.BaseDirectory as xdg
+
+def setup_proxies():
+    apt_pkg.init_config()
+    os.environ['http_proxy'] = apt_pkg.config.get('Acquire::http::Proxy', '')
+    os.environ['ftp_proxy'] = apt_pkg.config.get('Acquire::ftp::Proxy', '')
+
+def get_cache_filename(mkdir=True):
+    home = xdg.xdg_cache_home
+    path = os.path.join(home, 'tc-apt-file')
+    if mkdir:
+        try:
+            os.makedirs(path)
+        except OSError:
+            pass
+    return os.path.join(path, 'cache.tc')
+
+def do_update(options):
+    mirror = 'http://ftp.debian.org/'
+    distribution = 'unstable'
+    architecture = 'i386'
+    parse = re.compile('^(.*\S)\s+(\S+)$').match
+    data = collections.defaultdict(list)
+    for section in 'main', 'contrib', 'non-free':
+        url = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(mirror=mirror, dist=distribution, section=section, arch=architecture)
+        child = ipc.Popen('wget -O- -q {} | gzip -dc'.format(url), shell=True, stdout=ipc.PIPE)
+        skip = True
+        for line in child.stdout:
+            if skip:
+                if line.startswith('FILE'):
+                    skip = False
+            else:
+                filename, packages = parse(line).groups()
+                for package in [pkg.split('/')[-1] for pkg in packages.split(',')]:
+                    data[package] += [filename]
+        if child.wait() != 0:
+            raise IOError
+    hdb = pytc.HDB()
+    hdb.tune(bnum=65521, apow=4, fpow=10, opts=pytc.HDBTDEFLATE)
+    hdb.open(options.cache_file, pytc.HDBOWRITER | pytc.HDBOCREAT|  pytc.HDBOTRUNC)
+    try:
+        for package, filenames in data.iteritems():
+            hdb.putasync(package, '\n'.join(filenames))
+    finally:
+        hdb.close()
+
+def strings_to_regexp(strings, regexp=False, whole=True):
+    if regexp:
+        result = '|'.join(strings)
+    else:
+        result = '(?:{0})'.format('|'.join(map(re.escape, strings)))
+        if whole:
+            result = '^{0}$'.format(result)
+    return re.compile(result)
+
+def do_list(options):
+    regexp = strings_to_regexp(options.packages, options.regexp)
+    matching = re.compile(regexp).search
+    hdb = pytc.HDB()
+    hdb.open(options.cache_file, pytc.HDBOREADER)
+    try:
+        hdb.iterinit()
+        for package in hdb.iterkeys():
+            if matching(package):
+                for filename in hdb[package].splitlines():
+                    print '{pkg}: /{file}'.format(pkg=package, file=filename)
+    finally:
+        hdb.close()
+
+def do_search(options):
+    regexp = strings_to_regexp(options.terms, options.regexp, whole=False)
+    matching = re.compile(regexp).search
+    hdb = pytc.HDB()
+    hdb.open(options.cache_file, pytc.HDBOREADER)
+    try:
+        hdb.iterinit()
+        for package, filenames in hdb.iteritems():
+            for filename in filenames.splitlines():
+                if matching('/' + filename):
+                    print '{pkg}: /{file}'.format(pkg=package, file=filename)
+    finally:
+        hdb.close()
+
+def main():
+    setup_proxies()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--cache-file',
+        help='use this cache file (default: {path})'.format(path=get_cache_filename(mkdir=False))
+    )
+    subparsers = parser.add_subparsers(dest='command')
+    subparsers.add_parser('update', help='download indices from ftp.debian.org')
+    cmd_list = subparsers.add_parser('list', help='list files of the package(s)')
+    cmd_list.add_argument('packages', metavar='PACKAGE', nargs='+')
+    cmd_list.add_argument('-E', '--regexp', action='store_true')
+    cmd_search = subparsers.add_parser('search', help='search for file(s)')
+    cmd_search.add_argument('terms', metavar='TERM', nargs='+')
+    cmd_search.add_argument('-E', '--regexp', action='store_true')
+    options = parser.parse_args()
+    if options.cache_file is None:
+        options.cache_file = get_cache_filename()
+    command = options.command
+    globals()['do_' + command](options)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
