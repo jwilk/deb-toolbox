@@ -30,7 +30,7 @@ def get_cache_filename(mkdir=True):
     return os.path.join(path, 'cache.tc')
 
 def do_update(options):
-    mirror = 'http://ftp.debian.org/'
+    mirror = 'http://ftp.debian.org/debian'
     distribution = 'unstable'
     architecture = 'i386'
     parse = re.compile('^(.*\S)\s+(\S+)$').match
