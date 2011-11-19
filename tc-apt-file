@@ -51,7 +51,7 @@ def do_update(options):
             raise IOError
     hdb = pytc.HDB()
     hdb.tune(bnum=65521, apow=4, fpow=10, opts=pytc.HDBTDEFLATE)
-    hdb.open(options.cache_file, pytc.HDBOWRITER | pytc.HDBOCREAT|  pytc.HDBOTRUNC)
+    hdb.open(options.cache_file, pytc.HDBOWRITER | pytc.HDBOCREAT | pytc.HDBOTRUNC)
     try:
         for package, filenames in data.iteritems():
             hdb.putasync(package, '\n'.join(filenames))
