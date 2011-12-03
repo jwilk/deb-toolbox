@@ -49,6 +49,8 @@ template = jinja2.Template('''\
 From: {{name}} <{{email}}>
 To: submit@bugs.debian.org
 Subject: {{source}}: FTBFS{% if archspecific %} on {{arch}}{% endif %}: XXX
+X-Debbugs-No-Ack: please
+X-Debbugs-CC: {{email}}
 
 Source: {{source}}
 Version: {{version}}
