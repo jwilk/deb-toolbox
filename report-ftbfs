@@ -1,0 +1,111 @@
+#!/usr/bin/python3
+
+# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import os
+import pwd
+import re
+import socket
+import subprocess as ipc
+import sys
+import tempfile
+import urllib.request
+
+import jinja2
+
+def get_full_name():
+    return (
+        os.getenv('DEBFULLNAME') or
+        pwd.getpwuid(os.getuid()).pw_gecos.split(',')[0]
+    )
+
+def get_email():
+    return (
+        os.getenv('DEBEMAIL') or
+        '{login}@{domain}'.format(login=pwd.getpwduid(os.getuid()).pw_name, domain=socket.getfqdn())
+    )
+
+def get_date():
+    return email.utils.formatdate()
+
+mailinglist_map = {
+    'armel': 'debian-arm',
+    'armhf': 'debian-arm',
+    'kfreebsd-amd64': 'debian-bsd',
+    'kfreebsd-i386': 'debian-bsd',
+    'mipsel': 'debian-mips',
+    's390x': 'debian-s390',
+}
+
+usertag_map = {
+    'armel': 'eabi',
+}
+
+template = jinja2.Template('''\
+From: {{name}} <{{email}}>
+To: submit@bugs.debian.org
+Subject: {{source}}: FTBFS{% if archspecific %} on {{arch}}{% endif %}: XXX
+
+Source: {{source}}
+Version: {{version}}
+Severity: serious
+Justification: fails to build from source\
+{% if archspecific %}
+User: {{mailinglist}}@lists.debian.org
+Usertags: {{usertag}}
+{% endif %}
+{{source}} FTBFS{% if archspecific %} on {{arch}}{% endif %}:\
+''')
+
+def main(options):
+    if options.mutt:
+        sys.stdout = mail_template = tempfile.NamedTemporaryFile(mode='w+', prefix='report-ftbfs', suffix='.mail')
+    if options.logname.startswith(('http://', 'https://')):
+        url = options.logname + '&raw='
+        log_file = urllib.request.urlopen(url)
+    else:
+        url = None
+        log_file = open(options.logname, 'rb')
+    try:
+        log = log_file.read().decode('UTF-8', 'replace')
+    finally:
+        log_file.close()
+    source = re.findall('^Package: (.*)$', log, re.MULTILINE)[-1]
+    version = re.findall('^Source-Version: (.*)$', log, re.MULTILINE)[-1]
+    architecture = re.findall('^Architecture: (.*)$', log, re.MULTILINE)[-1]
+    mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
+    usertag = usertag_map.get(architecture, architecture)
+    print(template.render(
+        name=get_full_name(),
+        email=get_email(),
+        source=source,
+        arch=architecture,
+        version=version,
+        mailinglist=mailinglist,
+        usertag=usertag,
+        archspecific=options.arch_specific,
+    ))
+    for line in log.splitlines():
+        print(('| ' + line).rstrip())
+    print()
+    if url is not None:
+        print('Full build log:')
+        print(options.logname)
+    sys.stdout = sys.__stdout__
+    if options.mutt:
+        mail_template.flush()
+        ipc.check_call(['mutt', '-H', mail_template.name])
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--arch-specific', action='store_true')
+    parser.add_argument('-m', '--mutt', action='store_true')
+    parser.add_argument('logname', metavar='<logfile>')
+    options = parser.parse_args()
+    main(options)
+
+# vim:ts=4 sw=4 et
