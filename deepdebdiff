@@ -19,9 +19,9 @@ base1=$(basename "$deb1" .deb)
 base2=$(basename "$deb2" .deb)
 tmpdir=$(mktemp -t -d)
 mkdir -p "$tmpdir/$base1/"
-dpkg-deb -x "$deb1" "$tmpdir/$base1/"
+dpkg-deb --raw-extract "$deb1" "$tmpdir/$base1/"
 mkdir -p "$tmpdir/$base2/"
-dpkg-deb -x "$deb2" "$tmpdir/$base2/"
+dpkg-deb --raw-extract "$deb2" "$tmpdir/$base2/"
 cd "$tmpdir"
 diff -urN "$base1/" "$base2/"
 cd /
