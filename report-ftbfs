@@ -42,7 +42,9 @@ mailinglist_map = {
 }
 
 usertag_map = {
+    'amd64': None,
     'armel': 'eabi',
+    'i386': None,
 }
 
 template = jinja2.Template('''\
@@ -56,7 +58,7 @@ Source: {{source}}
 Version: {{version}}
 Severity: serious
 Justification: fails to build from source
-{% if archspecific %}\
+{% if usertag %}\
 User: {{mailinglist}}@lists.debian.org
 Usertags: {{usertag}}
 {% endif %}
@@ -79,8 +81,11 @@ def main(options):
     source = re.findall('^Package: (.*)$', log, re.MULTILINE)[-1]
     version = re.findall('^Source-Version: (.*)$', log, re.MULTILINE)[-1]
     architecture = re.findall('^Architecture: (.*)$', log, re.MULTILINE)[-1]
-    mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
-    usertag = usertag_map.get(architecture, architecture)
+    if options.arch_specific:
+        usertag = usertag_map.get(architecture, architecture)
+        mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
+    else:
+        usertag = mailinglist = None
     print(template.render(
         name=get_full_name(),
         email=get_email(),
