@@ -50,7 +50,7 @@ usertag_map = {
 template = jinja2.Template('''\
 From: {{name}} <{{email}}>
 To: submit@bugs.debian.org
-Subject: {{source}}: FTBFS{% if archspecific %} on {{arch}}{% endif %}: XXX
+Subject: {{source}}: FTBFS{% if archspecific %} on {{arch}}{% endif %}
 X-Debbugs-No-Ack: please
 X-Debbugs-CC: {{email}}
 
