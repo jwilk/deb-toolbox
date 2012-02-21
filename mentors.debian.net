@@ -1,0 +1,127 @@
+#!/usr/bin/python3
+
+# Copyright © 2012 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import collections
+import contextlib
+import re
+import shutil
+import sys
+import tempfile
+
+import apt
+import apt_pkg
+
+mentors_root = 'http://mentors.debian.net/debian'
+
+class ArgumentParser(argparse.ArgumentParser):
+
+    def __init__(self, *args, **kwargs):
+        argparse.ArgumentParser.__init__(self, *args, **kwargs)
+        self.add_argument('--verbose', action='store_true')
+        p_lookup = self.add_subparser('lookup')
+        p_lookup.add_argument('pkgname', metavar='PKG-NAME[_VERSION]')
+        p_checkout = self.add_subparser('checkout')
+        p_checkout.add_argument('pkgname', metavar='PKG-NAME[_VERSION]')
+        p_upgrade = self.add_subparser('upgrade')
+
+    def add_subparser(self, name, **kwargs):
+        try:
+            self.__subparsers
+        except AttributeError:
+            self.__subparsers = self.add_subparsers(parser_class=argparse.ArgumentParser)
+        p = self.__subparsers.add_parser(name, **kwargs)
+        p.set_defaults(action=globals()['do_' + name])
+        return p
+
+@contextlib.contextmanager
+def temporary_directory(*args, **kwargs):
+    kwargs = dict(kwargs)
+    kwargs.setdefault('prefix', 'mentors.debian.net.')
+    tmpdir = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        yield tmpdir
+    finally:
+        shutil.rmtree(tmpdir)
+
+def get_sources(options, tmpdir=None):
+    if tmpdir is None:
+        with temporary_directory() as tmpdir:
+            return get_sources(options, tmpdir)
+    acquire = apt_pkg.Acquire()
+    if options.verbose:
+        progress = apt.progress.text.AcquireProgress()
+        fetcher = apt_pkg.Acquire(progress)
+    else:
+        fetcher = apt_pkg.Acquire()
+    files = {}
+    for area in 'main', 'contrib', 'non-free':
+        uri = '{root}/dists/unstable/{area}/source/Sources.gz'.format(root=mentors_root, area=area)
+        description = uri
+        filename = '{area}.sources.gz'.format(area=area)
+        files[area] = apt_pkg.AcquireFile(
+            fetcher,
+            uri=uri,
+            descr=description,
+            destfile=filename,
+        )
+    rc = fetcher.run()
+    if rc != fetcher.RESULT_CONTINUE:
+        raise RuntimeError('Fetching sources failed')
+    for file in files.values():
+        if file.status != file.STAT_DONE:
+            raise RuntimeError('Fetching sources failed')
+    result = collections.defaultdict(dict)
+    for file in files.values():
+        with open(file.destfile) as file:
+            for para in apt_pkg.TagFile(file):
+                pkgname = para['Package']
+                version = para['Version']
+                result[pkgname][version] = para
+    return result
+
+def do_lookup(options):
+    if '_' in options.pkgname:
+        pkgname, req_version = options.pkgname.split('_', 1)
+    else:
+        pkgname = options.pkgname
+        req_version = None
+    dsc_regex = re.compile('^ *[0-9a-f]+ [0-9]+ ({pkgname}_[a-z0-9.:~+-]+[.]dsc)$'.format(pkgname=re.escape(pkgname)))
+    for version, pkgdata in get_sources(options)[pkgname].items():
+        if req_version is not None and version != req_version:
+            continue
+        match = None
+        for line in pkgdata['Files'].splitlines():
+            match = dsc_regex.match(line)
+            if match is not None:
+                break
+        if match is None:
+            raise LookupError('Missing .dsc filename')
+        [dsc_filename] = match.groups()
+        print('{root}/{directory}/{filename} ({version})'.format(
+            version=version,
+            root=mentors_root,
+            directory=pkgdata['Directory'],
+            filename=dsc_filename,
+        ))
+
+def do_checkout(options):
+    raise NotImplementedError
+
+def do_upgrade(options):
+    raise NotImplementedError
+
+def main():
+    apt_pkg.init_system()
+    parser = ArgumentParser()
+    options = parser.parse_args()
+    return options.action(options)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
