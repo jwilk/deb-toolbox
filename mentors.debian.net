@@ -62,7 +62,7 @@ def get_sources(options, tmpdir=None):
     for area in 'main', 'contrib', 'non-free':
         uri = '{root}/dists/unstable/{area}/source/Sources.gz'.format(root=mentors_root, area=area)
         description = uri
-        filename = '{area}.sources.gz'.format(area=area)
+        filename = '{tmp}/{area}.sources.gz'.format(tmp=tmpdir, area=area)
         files[area] = apt_pkg.AcquireFile(
             fetcher,
             uri=uri,
