@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+
+# Copyright © 2012 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+'''
+This program edits (in-place) a (DEBIAN/)control file:
+- demoting some Depends to Recommends;
+- changing (= $version) to (= $another_version).
+
+It's useful as a hook for deb-reversion.
+'''
+
+import argparse
+import re
+import sys
+
+import apt_pkg
+
+def do_edit(options):
+    [para] = apt_pkg.TagFile(options.ctrlfile)
+    try:
+        depends = para['Depends']
+    except LookupError:
+        return
+    depends = [d.strip() for d in depends.split(',')]
+    try:
+        recommends = [para['Recommends']]
+    except LookupError:
+        recommends = []
+    new_depends = []
+    demote_regex = re.compile('^({alternative})( .*)$'.format(
+        alternative='|'.join(re.escape(x) for x in options.demote)
+    ))
+    for depends in depends:
+        if demote_regex.match(depends):
+            recommends += [depends]
+        else:
+            new_depends += [depends]
+    new_depends = ', '.join(new_depends)
+    if options.fix_version is not None:
+        new_depends = new_depends.replace(
+            '(= {version})'.format(version=para['Version']),
+            '(= {version})'.format(version=options.fix_version),
+        )
+    recommends = ', '.join(recommends)
+    options.ctrlfile.seek(0)
+    sys.stdout = options.ctrlfile
+    for line in str(para).splitlines():
+        if line.startswith('Depends:'):
+            print('Depends: {value}'.format(value=new_depends))
+            if recommends:
+                print('Recommends: {value}'.format(value=recommends))
+        elif line.startswith('Recommends:'):
+            pass
+        else:
+            print(line)
+
+def main():
+    apt_pkg.init()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--demote', metavar='<library>', action='append')
+    parser.add_argument('--fix-version', metavar='<version>')
+    parser.add_argument('ctrlfile', metavar='<control-file>', type=argparse.FileType('r+'))
+    options = parser.parse_args()
+    do_edit(options)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
