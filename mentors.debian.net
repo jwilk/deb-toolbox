@@ -18,6 +18,10 @@ import apt_pkg
 
 mentors_root = 'http://mentors.debian.net/debian'
 
+class debversion(str):
+    def __lt__(self, other):
+        return apt_pkg.version_compare(self, other) < 0
+
 class ArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
@@ -80,7 +84,7 @@ def get_sources(options, tmpdir=None):
         with open(file.destfile) as file:
             for para in apt_pkg.TagFile(file):
                 pkgname = para['Package']
-                version = para['Version']
+                version = debversion(para['Version'])
                 result[pkgname][version] = para
     return result
 
@@ -91,7 +95,8 @@ def do_lookup(options):
         pkgname = options.pkgname
         req_version = None
     dsc_regex = re.compile('^ *[0-9a-f]+ [0-9]+ ({pkgname}_[a-z0-9.:~+-]+[.]dsc)$'.format(pkgname=re.escape(pkgname)))
-    for version, pkgdata in get_sources(options)[pkgname].items():
+    sources = get_sources(options)[pkgname].items()
+    for version, pkgdata in sorted(sources, reverse=True):
         if req_version is not None and version != req_version:
             continue
         match = None
