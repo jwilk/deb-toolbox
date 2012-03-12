@@ -1,0 +1,4 @@
+syntax: glob
+
+sbuild/sbuild-slave
+sbuild/*.o
