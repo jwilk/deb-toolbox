@@ -1,0 +1,5 @@
+#!/bin/sh
+installed='install ok installed'
+exec rc-alert "$@" \
+  $(grep-status -F Status -w "$installed" -n -s Source:Package | sed -e 's/\([^ ]*\).*/src:\1/') \
+  $(grep-status -F Status -w "$installed" -n -s Package)
