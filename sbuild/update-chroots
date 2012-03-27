@@ -10,7 +10,13 @@ chroots=$(schroot --all-source-chroots -i | sed -n -e '/  Name */s//source:/p')
 set -x
 for chroot in $chroots
 do
-    sudo schroot -c $chroot -- sh -c 'apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y && apt-get clean'
+    sudo schroot -c $chroot -- sh -c "
+        grep -Fw archive.debian.org /etc/apt/sources.list > /dev/null && exit
+        apt-get update &&
+        apt-get dist-upgrade -y &&
+        apt-get autoremove -y &&
+        apt-get clean
+    "
 done
 
 # vim:ts=4 sw=4 et
