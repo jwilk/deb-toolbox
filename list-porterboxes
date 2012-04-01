@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding=UTF-8
 
-# Copyright © 2010 Jakub Wilk <jwilk@debian.org>
+# Copyright © 2010, 2012 Jakub Wilk <jwilk@debian.org>
 
 # Redistribution and use in source and compiled forms, with or without
 # modification, are permitted under any circumstances. No warranty.
@@ -33,15 +33,21 @@ def get_porterboxes():
 def main():
     oparser = argparse.ArgumentParser()
     oparser.add_argument('-u', '--unique', action='store_true')
+    oparser.add_argument('architecture', metavar='<architecture>', nargs='?')
     options = oparser.parse_args()
 
     porterboxes = get_porterboxes()
 
+    template = '%(hostname)s'
+    if options.architecture is None:
+        template = '%(architecture)s\t' + template
     for architecture, hostnames in sorted(porterboxes.iteritems()):
         if options.unique:
             hostnames = [hostnames[0]]
+        if options.architecture is not None and architecture != options.architecture:
+            continue
         for hostname in hostnames:
-            print '%(architecture)s\t%(hostname)s' % locals()
+            print template % locals()
 
 if __name__ == '__main__':
     main()
