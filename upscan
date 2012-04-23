@@ -65,6 +65,8 @@ if options.current_version:
 if options.version is not None:
     commandline += ['--download-version', options.version]
 logging.debug('+ %s', quote_commandline(commandline))
+if options.insecure:
+    os.environ['PERL_LWP_SSL_VERIFY_HOSTNAME'] = '0'
 pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
 dehs = etree.parse(pipe.stdout)
 pipe.wait()
