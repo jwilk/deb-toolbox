@@ -1,0 +1,309 @@
+#!/usr/bin/python
+# encoding=UTF-8
+
+# Copyright © 2012 Jakub Wilk <jwilk@debian.org>
+
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+'''
+simple implementation of DEP-8: automatic as-installed package testing
+'''
+
+import argparse
+import os
+import re
+import shutil
+import subprocess as ipc
+import sys
+import tempfile
+
+import debian.deb822 as deb822
+
+def split_on_comma(s, re=re.compile('\s*,\s*')):
+    return re.split(s)
+
+class Skip(Exception):
+    pass
+
+class Fail(Exception):
+    pass
+
+class Progress(object):
+
+    _hourglass = r'/-\|'
+
+    def __init__(self):
+        self._counter = 0
+        if sys.stdout.isatty():
+            self._back = '\b'
+        else:
+            self._back = ''
+
+    def _write(self, s):
+        sys.stdout.write(s)
+        sys.stdout.flush()
+
+    def ping(self):
+        if not self._back:
+            return
+        hourglass = self._hourglass
+        c = self._counter + 1
+        self._write(self._back + hourglass[c % len(hourglass)])
+        self._counter = c
+
+    def start(self):
+        pass
+
+    def skip(self, reason):
+        raise NotImplementedError
+
+    def fail(self, reason):
+        raise NotImplementedError
+
+    def ok(self):
+        raise NotImplementedError
+
+    def close(self):
+        pass
+
+class DefaultProgress(Progress):
+
+    def start(self, name):
+        if self._back:
+            self._write(' ')
+        self.ping()
+
+    def skip(self, reason):
+        self._write(self._back + 'S')
+
+    def fail(self, reason):
+        self._write(self._back + 'F')
+
+    def ok(self):
+        self._write(self._back + '.')
+
+    def close(self):
+        self._write('\n')
+
+class VerboseProgress(Progress):
+
+    def start(self, name):
+        self._write('%s ... ' % name + (' ' if self._back else ''))
+        self.ping()
+
+    def skip(self, reason):
+        self._write(self._back + 'SKIP (%s)\n' % reason)
+
+    def fail(self, reason):
+        self._write(self._back + 'FAIL (%s)\n' % reason)
+
+    def ok(self):
+        self._write(self._back + 'ok\n')
+
+class TestGroup(object):
+
+    def __init__(self):
+        self.tests = []
+        self.restrictions = frozenset()
+        self.features = frozenset()
+        self.depends = '@'
+        self.tests_directory = 'debian/tests'
+
+    def __iter__(self):
+        return iter(self.tests)
+
+    def expand_depends(self, packages):
+        if '@' not in self.depends:
+            return
+        or_clauses = []
+        for or_clause in deb822.PkgRelation.parse_relations(self.depends):
+            stripped_or_clause = [r for r in or_clause if r['name'] != '@']
+            if len(stripped_or_clause) < len(or_clause):
+                for package in packages:
+                    or_clauses += [
+                        stripped_or_clause +
+                        [dict(name=package, version=None, arch=None)]
+                    ]
+            else:
+                or_clauses += [or_clause]
+        self.depends = deb822.PkgRelation.str(or_clauses)
+
+    def check_depends(self):
+        assert '@' not in self.depends
+        child = ipc.Popen(['dpkg-checkbuilddeps', '/dev/stdin'],
+            stdin=ipc.PIPE,
+            stderr=ipc.PIPE,
+            env={}
+        )
+        child.stdin.write('Source: dummy\nBuild-Depends: %s\n' % self.depends)
+        child.stdin.close()
+        error = child.stderr.read()
+        if child.wait() != 0:
+            error = re.sub('^dpkg-checkbuilddeps: Unmet build dependencies', 'unmet dependencies', error)
+            error = error.rstrip()
+            raise Skip(error)
+
+    def check_restrictions(self):
+        for r in self.restrictions:
+            if r == 'rw-build-tree':
+                # TODO!
+                raise Skip('rw-build-tree restriction is not implemented; use adt-run')
+            elif r == 'needs-root':
+                if os.getuid() != 0:
+                    raise Skip('this test needs root privileges')
+            elif r == 'breaks-testbed':
+                raise Skip('breaks-testbed restriction is not implemented; use adt-run')
+            else:
+                raise Skip('unknown restriction: %s' % r)
+
+    def check(self):
+        self.check_depends()
+        self.check_restrictions()
+
+    def run(self, test, progress, skip_reason=None):
+        progress.start(test)
+        if skip_reason is not None:
+            progress.skip(skip_reason)
+            raise Skip(skip_reason)
+        try:
+            self.check()
+        except Skip, exc:
+            progress.skip(str(exc))
+            raise
+        path = os.path.join(self.tests_directory, test)
+        tmpdir = tempfile.mkdtemp(prefix='sadt')
+        environ = dict(os.environ)
+        environ['TMPDIR'] = tmpdir
+        child = ipc.Popen(['annotate-output', '+', path],
+            stdout=ipc.PIPE,
+            env=environ
+        )
+        output = []
+        stderr = False
+        for i, line in enumerate(child.stdout):
+            progress.ping()
+            line = line.lstrip()
+            output += [line]
+            if line.startswith('E:'):
+                stderr = True
+        rc = child.wait()
+        shutil.rmtree(tmpdir)
+        if rc == 0:
+            if stderr:
+                rc = -1
+                fail_reason = 'stderr non-empty'
+                progress.fail(fail_reason)
+            else:
+                progress.ok()
+        else:
+            fail_reason = 'exit code: %d' % rc
+            progress.fail(fail_reason)
+        if rc != 0:
+            raise Fail(fail_reason, ''.join(output))
+
+    def add_tests(self, tests):
+        tests = split_on_comma(tests)
+        self.tests = frozenset(tests)
+
+    def add_restrictions(self, restrictions):
+        restrictions = split_on_comma(restrictions)
+        self.restrictions = frozenset(restrictions)
+
+    def add_features(self, features):
+        features = split_on_comma(features)
+        self.features = frozenset(features)
+
+    def add_depends(self, depends):
+        self.depends = depends
+
+    def add_tests_directory(self, path):
+        self.tests_directory = path
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
+    parser.add_argument('-b', '--built-source-tree', action='store_true', help='assume built source tree')
+    options = parser.parse_args()
+    binary_packages = set()
+    with open('debian/control') as file:
+        for n, para in enumerate(deb822.Packages.iter_paragraphs(file)):
+            if n == 0:
+                para['Source']
+            else:
+                binary_packages.add(para['Package'])
+    test_groups = []
+    with open('debian/tests/control') as file:
+        for para in deb822.Packages.iter_paragraphs(file):
+            group = TestGroup()
+            for key, value in para.iteritems():
+                key = key.lower()
+                try:
+                    method = getattr(group, 'add_' + key)
+                except AttributeError:
+                    print >>sys.stderr, 'Warning: Unknown field %s, skipping the whole paragraph' % key
+                    group = None
+                    break
+                method(value)
+            if group is not None:
+                group.expand_depends(binary_packages)
+                test_groups += [group]
+    failures = []
+    n_skip = n_ok = 0
+    progress = VerboseProgress() if options.verbose else DefaultProgress()
+    try:
+        for group in test_groups:
+            for name in group:
+                try:
+                    if 'no-build-needed' in group.features or options.built_source_tree:
+                        skip_reason = None
+                    else:
+                        skip_reason = 'source tree not built'
+                    group.run(name, progress=progress, skip_reason=skip_reason)
+                except Skip:
+                    n_skip += 1
+                except Fail, exc:
+                    failures += [(name, exc)]
+                else:
+                    n_ok += 1
+    finally:
+        progress.close()
+    n_fail = len(failures)
+    n_test = n_fail + n_skip + n_ok
+    separator1 = '-' * 70
+    separator2 = '=' * 70
+    if failures:
+        for name, exception in failures:
+            print separator2
+            print 'FAIL: %s' % name
+            print separator1
+            print exception[1]
+    print separator1
+    print 'Ran %d test' % n_test + ('s' if n_test != 1 else '')
+    print
+    extra_message = []
+    if n_skip > 0:
+        extra_message += ['skipped=%d' % n_skip]
+    if n_fail > 0:
+        extra_message += ['failures=%d' % n_fail]
+    if extra_message:
+        extra_message = ' (%s)' % ', '.join(extra_message)
+    else:
+        extra_message = ''
+    message = ('OK' if n_fail == 0 else 'FAILED') + extra_message
+    print message
+    sys.exit(n_fail > 0)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
