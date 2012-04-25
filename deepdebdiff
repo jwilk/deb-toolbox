@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright © 2011 Jakub Wilk <jwilk@debian.org>
+# Copyright © 2011, 2012 Jakub Wilk <jwilk@debian.org>
 
 # Redistribution and use in source and compiled forms, with or without
 # modification, are permitted under any circumstances. No warranty.
@@ -18,12 +18,12 @@ deb2="$2"
 base1=$(basename "$deb1" .deb)
 base2=$(basename "$deb2" .deb)
 tmpdir=$(mktemp -t -d)
-mkdir -p "$tmpdir/$base1/"
-dpkg-deb --raw-extract "$deb1" "$tmpdir/$base1/"
-mkdir -p "$tmpdir/$base2/"
-dpkg-deb --raw-extract "$deb2" "$tmpdir/$base2/"
+mkdir -p "$tmpdir/a/$base1/"
+dpkg-deb --raw-extract "$deb1" "$tmpdir/a/$base1/"
+mkdir -p "$tmpdir/b/$base2/"
+dpkg-deb --raw-extract "$deb2" "$tmpdir/b/$base2/"
 cd "$tmpdir"
-diff -urN "$base1/" "$base2/"
+diff -urN "a/$base1/" "b/$base2/"
 cd /
 rm -rf "$tmpdir"
 
