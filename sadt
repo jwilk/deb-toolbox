@@ -23,11 +23,21 @@ import argparse
 import os
 import re
 import shutil
+import stat
 import subprocess as ipc
 import sys
 import tempfile
 
 import debian.deb822 as deb822
+
+def chmod_x(path):
+    '''
+    chmod a+X <path>
+    '''
+    old_mode = stat.S_IMODE(os.stat(path).st_mode)
+    new_mode = old_mode | ((old_mode & 0o444) >> 2)
+    if old_mode != new_mode:
+        os.chmod(path, new_mode)
 
 def split_on_comma(s, re=re.compile('\s*,\s*')):
     return re.split(s)
@@ -181,6 +191,7 @@ class TestGroup(object):
             progress.skip(str(exc))
             raise
         path = os.path.join(self.tests_directory, test)
+        chmod_x(path)
         tmpdir = tempfile.mkdtemp(prefix='sadt')
         environ = dict(os.environ)
         environ['TMPDIR'] = tmpdir
