@@ -45,6 +45,9 @@ def split_on_comma(s, re=re.compile('\s*,\s*')):
 class Skip(Exception):
     pass
 
+class RwBuildTreeNeeded(Skip):
+    pass
+
 class Fail(Exception):
     pass
 
@@ -128,6 +131,7 @@ class TestGroup(object):
         self.features = frozenset()
         self.depends = '@'
         self.tests_directory = 'debian/tests'
+        self._check_depends_cache = None
 
     def __iter__(self):
         return iter(self.tests)
@@ -150,6 +154,10 @@ class TestGroup(object):
 
     def check_depends(self):
         assert '@' not in self.depends
+        if self._check_depends_cache is not None:
+            if isinstance(self._depends_cache, Exception):
+                raise self._check_depends_cache
+            return
         child = ipc.Popen(['dpkg-checkbuilddeps', '/dev/stdin'],
             stdin=ipc.PIPE,
             stderr=ipc.PIPE,
@@ -161,13 +169,18 @@ class TestGroup(object):
         if child.wait() != 0:
             error = re.sub('^dpkg-checkbuilddeps: Unmet build dependencies', 'unmet dependencies', error)
             error = error.rstrip()
-            raise Skip(error)
+            skip = Skip(error)
+            self._depends_cache = skip
+            raise skip
+        else:
+            self._depends_cache = True
 
-    def check_restrictions(self):
-        for r in self.restrictions:
+    def check_restrictions(self, ignored_restrictions):
+        restrictions = self.restrictions - frozenset(ignored_restrictions)
+        for r in restrictions:
             if r == 'rw-build-tree':
-                # TODO!
-                raise Skip('rw-build-tree restriction is not implemented; use adt-run')
+                # This will be handled separately
+                continue
             elif r == 'needs-root':
                 if os.getuid() != 0:
                     raise Skip('this test needs root privileges')
@@ -175,21 +188,39 @@ class TestGroup(object):
                 raise Skip('breaks-testbed restriction is not implemented; use adt-run')
             else:
                 raise Skip('unknown restriction: %s' % r)
+        if 'rw-build-tree' in restrictions:
+            # This will be handled separately
+            raise RwBuildTreeNeeded
 
-    def check(self):
+    def check(self, ignored_restrictions=()):
         self.check_depends()
-        self.check_restrictions()
+        self.check_restrictions(ignored_restrictions)
 
-    def run(self, test, progress, skip_reason=None):
+    def run(self, test, progress, skip_reason=None, rw_build_tree=None):
         progress.start(test)
         if skip_reason is not None:
             progress.skip(skip_reason)
             raise Skip(skip_reason)
+        ignored_restrictions = set()
+        if rw_build_tree:
+            ignored_restrictions.add('rw-build-tree')
         try:
-            self.check()
+            self.check(ignored_restrictions)
         except Skip, exc:
             progress.skip(str(exc))
             raise
+        if rw_build_tree:
+            cwd = os.getcwd()
+            os.chdir(rw_build_tree)
+        else:
+            cwd = None
+        try:
+            self._run(test, progress)
+        finally:
+            if cwd is not None:
+                os.chdir(cwd)
+
+    def _run(self, test, progress):
         path = os.path.join(self.tests_directory, test)
         chmod_x(path)
         tmpdir = tempfile.mkdtemp(prefix='sadt')
@@ -240,6 +271,12 @@ class TestGroup(object):
     def add_tests_directory(self, path):
         self.tests_directory = path
 
+def copy_build_tree():
+    rw_build_tree = tempfile.mkdtemp(prefix='sadt-rwbt.')
+    print >>sys.stderr, 'Info: copying build tree to %s' % rw_build_tree
+    ipc.check_call(['cp', '-a', '.', rw_build_tree])
+    return rw_build_tree
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
@@ -271,6 +308,7 @@ def main():
     failures = []
     n_skip = n_ok = 0
     progress = VerboseProgress() if options.verbose else DefaultProgress()
+    rw_build_tree = None
     try:
         for group in test_groups:
             for name in group:
@@ -279,7 +317,19 @@ def main():
                         skip_reason = None
                     else:
                         skip_reason = 'source tree not built'
-                    group.run(name, progress=progress, skip_reason=skip_reason)
+                    if rw_build_tree is None:
+                        try:
+                            group.check()
+                        except RwBuildTreeNeeded:
+                            rw_build_tree = copy_build_tree()
+                            assert rw_build_tree is not None
+                        except Skip:
+                            pass
+                    group.run(name,
+                        progress=progress,
+                        skip_reason=skip_reason,
+                        rw_build_tree=rw_build_tree,
+                    )
                 except Skip:
                     n_skip += 1
                 except Fail, exc:
@@ -312,6 +362,8 @@ def main():
         extra_message = ''
     message = ('OK' if n_fail == 0 else 'FAILED') + extra_message
     print message
+    if rw_build_tree is not None:
+        shutil.rmtree(rw_build_tree)
     sys.exit(n_fail > 0)
 
 if __name__ == '__main__':
