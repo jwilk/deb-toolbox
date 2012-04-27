@@ -158,13 +158,10 @@ class TestGroup(object):
             if isinstance(self._depends_cache, Exception):
                 raise self._check_depends_cache
             return
-        child = ipc.Popen(['dpkg-checkbuilddeps', '/dev/stdin'],
-            stdin=ipc.PIPE,
+        child = ipc.Popen(['dpkg-checkbuilddeps', '-d', self.depends],
             stderr=ipc.PIPE,
             env={}
         )
-        child.stdin.write('Source: dummy\nBuild-Depends: %s\n' % self.depends)
-        child.stdin.close()
         error = child.stderr.read()
         if child.wait() != 0:
             error = re.sub('^dpkg-checkbuilddeps: Unmet build dependencies', 'unmet dependencies', error)
