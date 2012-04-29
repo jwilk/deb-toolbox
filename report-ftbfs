@@ -38,6 +38,7 @@ mailinglist_map = {
     'kfreebsd-amd64': 'debian-bsd',
     'kfreebsd-i386': 'debian-bsd',
     'mipsel': 'debian-mips',
+    'ppc64': 'debian-powerpc',
     's390x': 'debian-s390',
 }
 
