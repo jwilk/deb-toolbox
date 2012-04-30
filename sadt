@@ -17,6 +17,17 @@
 
 '''
 simple implementation of DEP-8: automatic as-installed package testing
+
+* It's the user's responsibility to install any packages required to run tests.
+sadt will skip tests that don't have dependencies satisfied.
+
+* By default, sadt assumes that the source tree is unbuilt and therefore skips
+all tests that don't declare the "no-build-needed" feature.
+
+* If -b/--built-source-tree is used, it's the user's responsibility to actually
+build the package.
+
+* It always skips tests declaring the "breaks-testbed" restriction.
 '''
 
 import argparse
