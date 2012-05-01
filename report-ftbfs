@@ -48,7 +48,7 @@ usertag_map = {
     'i386': None,
 }
 
-template = jinja2.Template('''\
+default_template = jinja2.Template('''\
 From: {{name}} <{{email}}>
 To: submit@bugs.debian.org
 Subject: {{source}}: FTBFS{% if archspecific %} on {{arch}}{% endif %}
@@ -64,6 +64,22 @@ User: {{mailinglist}}@lists.debian.org
 Usertags: {{usertag}}
 {% endif %}
 {{source}} FTBFS{% if archspecific %} on {{arch}}{% endif %}:\
+''')
+
+qa_doublebuild_template = jinja2.Template('''\
+From: {{name}} <{{email}}>
+To: submit@bugs.debian.org
+Subject: {{source}}: FTBFS if built twice in a row
+X-Debbugs-No-Ack: please
+X-Debbugs-CC: {{email}}
+
+Source: {{source}}
+Version: {{version}}
+Severity: important
+User: debian-qa@lists.debian.org
+Usertags: qa-doublebuild
+
+{{source}} FTBFS if built twice in a row:\
 ''')
 
 def main(options):
@@ -90,6 +106,9 @@ def main(options):
         mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
     else:
         usertag = mailinglist = None
+    template = default_template
+    if options.qa_doublebuild:
+        template = qa_doublebuild_template
     print(template.render(
         name=get_full_name(),
         email=get_email(),
@@ -115,6 +134,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--arch-specific', action='store_true')
     parser.add_argument('-m', '--mutt', action='store_true')
+    parser.add_argument('--qa-doublebuild', action='store_true')
     parser.add_argument('logname', metavar='<logfile>')
     options = parser.parse_args()
     main(options)
