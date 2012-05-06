@@ -286,7 +286,9 @@ def copy_build_tree():
     return rw_build_tree
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    for description in __doc__.splitlines():
+        if description: break
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
     parser.add_argument('-b', '--built-source-tree', action='store_true', help='assume built source tree')
     options = parser.parse_args()
