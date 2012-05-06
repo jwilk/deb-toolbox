@@ -69,7 +69,7 @@ Usertags: {{usertag}}
 qa_doublebuild_template = jinja2.Template('''\
 From: {{name}} <{{email}}>
 To: submit@bugs.debian.org
-Subject: {{source}}: FTBFS if built twice in a row
+Subject: {{source}}: FTBFS if built twice in a row{% if reason %}: {{reason}}{% endif %}
 X-Debbugs-No-Ack: please
 X-Debbugs-CC: {{email}}
 
@@ -107,8 +107,13 @@ def main(options):
     else:
         usertag = mailinglist = None
     template = default_template
+    reason = None
     if options.qa_doublebuild:
         template = qa_doublebuild_template
+        for s in 'aborting due to unexpected upstream changes', 'unrepresentable changes to source':
+            if ('dpkg-source: error: ' + s) in log:
+                reason = s
+                break
     print(template.render(
         name=get_full_name(),
         email=get_email(),
@@ -118,6 +123,7 @@ def main(options):
         mailinglist=mailinglist,
         usertag=usertag,
         archspecific=options.arch_specific,
+        reason=reason,
     ))
     for line in log.splitlines():
         print(('| ' + line).rstrip())
