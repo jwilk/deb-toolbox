@@ -291,7 +291,9 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
     parser.add_argument('-b', '--built-source-tree', action='store_true', help='assume built source tree')
+    parser.add_argument('tests', metavar='<test-name>', nargs='*', help='tests to run')
     options = parser.parse_args()
+    options.tests = frozenset(options.tests)
     binary_packages = set()
     with open('debian/control') as file:
         for n, para in enumerate(deb822.Packages.iter_paragraphs(file)):
@@ -322,6 +324,8 @@ def main():
     try:
         for group in test_groups:
             for name in group:
+                if options.tests and name not in options.tests:
+                    continue
                 try:
                     if 'no-build-needed' in group.features or options.built_source_tree:
                         skip_reason = None
