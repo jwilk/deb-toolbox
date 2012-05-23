@@ -29,9 +29,6 @@ def get_email():
         '{login}@{domain}'.format(login=pwd.getpwduid(os.getuid()).pw_name, domain=socket.getfqdn())
     )
 
-def get_date():
-    return email.utils.formatdate()
-
 mailinglist_map = {
     'armel': 'debian-arm',
     'armhf': 'debian-arm',
