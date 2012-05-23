@@ -1,0 +1,149 @@
+#!/usr/bin/python3
+
+# Copyright © 2012 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import os
+import pwd
+import re
+import shutil
+import socket
+import subprocess as ipc
+import sys
+import tempfile
+
+import apt
+import apt_pkg
+
+import jinja2
+
+template = jinja2.Template('''\
+From: {{name}} <{{email}}>
+To: submit@bugs.debian.org
+Subject: {{package}}: arch-dependent {{plural("file", "files", len(files))}} in "Multi-Arch: same" package
+X-Debbugs-No-Ack: please
+X-Debbugs-CC: {{email}}
+
+Package: {{package}}
+Version: {{version}}
+Severity: important
+User: multiarch-devel@lists.alioth.debian.org
+Usertags: multiarch
+
+{{package}} is marked as "Multi-Arch: same", but the following {{plural("file is", "files are", len(files))}} architecture-dependent:
+{% for file in files %}
+{{file}}
+{% endfor %}
+An example diff between {{architectures[0]}} and {{architectures[1]}} is attached.
+
+''')
+
+extract_filenames_from_archdiff = re.compile(b'diff -ur [^/]+([^ ]+)').findall
+subst_archdiff_junk = re.compile(b'Only in .*\n').sub
+
+subst_architecture = re.compile('(?<=_)[a-z0-9-]+(?=[.]deb$)').sub
+
+def strip_deb_suffix(s, regex=re.compile('[.]deb$')):
+    return regex.sub('', s)
+
+def get_full_name():
+    return (
+        os.getenv('DEBFULLNAME') or
+        pwd.getpwuid(os.getuid()).pw_gecos.split(',')[0]
+    )
+
+def get_email():
+    return (
+        os.getenv('DEBEMAIL') or
+        '{login}@{domain}'.format(login=pwd.getpwduid(os.getuid()).pw_name, domain=socket.getfqdn())
+    )
+
+def plural(x, y, n):
+    return x if n == 1 else y
+
+def main(options):
+    cache = apt.Cache()
+    packages = cache[options.package].versions
+    try:
+        [package] = [
+            pkg for pkg in packages
+            if options.version is None or options.version == pkg.version
+        ]
+    except ValueError:
+        raise ValueError('wrong version: {0}'.format(
+            ', '.join(pkg.version for pkg in packages))
+        )
+    [uri] = package.uris
+    uris = [
+        subst_architecture(arch, uri)
+        for arch in options.architectures
+    ]
+    tmpdir = tempfile.mkdtemp(prefix='report-multiarch-bug.')
+    progress = apt.progress.text.AcquireProgress()
+    fetcher = apt_pkg.Acquire(progress)
+    files = {}
+    for uri in uris:
+        filename = os.path.basename(uri)
+        files[filename] = apt_pkg.AcquireFile(
+            fetcher,
+            uri=uri,
+            descr=filename,
+            destfile=os.path.join(tmpdir, filename),
+        )
+    rc = fetcher.run()
+    if rc != fetcher.RESULT_CONTINUE:
+        raise RuntimeError('fetching files failed')
+    os.chdir(tmpdir)
+    for filename, file in files.items():
+        if file.status != file.STAT_DONE:
+            raise RuntimeError('fetching file failed ({0})'.format(filename))
+        commandline = ['dpkg-deb', '-x',
+            filename,
+            strip_deb_suffix(filename)
+        ]
+        ipc.check_call(commandline)
+    commandline = ['diff', '-ur'] + [strip_deb_suffix(f) for f in files.keys()]
+    child = ipc.Popen(commandline, stdout=ipc.PIPE)
+    (archdiff, stderr) = child.communicate()
+    archdiff = subst_archdiff_junk(b'', archdiff)
+    archdiff_affected = [
+        s.decode('ASCII')
+        for s in extract_filenames_from_archdiff(archdiff)
+    ]
+    archdiff_filename = '{0}.archdiff'.format(os.path.commonprefix(files.keys())[:-1])
+    with open(archdiff_filename, 'wb') as file:
+        file.write(archdiff)
+        del archdiff
+    mail = template.render(
+        name=get_full_name(),
+        email=get_email(),
+        package=options.package,
+        version=package.version,
+        architectures=options.architectures,
+        plural=plural,
+        len=len,
+        files=archdiff_affected,
+    )
+    if options.mutt:
+        with open('template', 'wt') as file:
+            file.write(mail)
+        commandline = ['mutt', '-H', 'template', '-a', archdiff_filename]
+        ipc.check_call(commandline)
+    else:
+        print(mail)
+    os.chdir('/')
+    shutil.rmtree(tmpdir)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--mutt', action='store_true')
+    parser.add_argument('-a', '--architectures', metavar='<arch>', nargs=2, default=['i386', 'amd64'])
+    parser.add_argument('package', metavar='<package>')
+    parser.add_argument('version', metavar='<version>', nargs='?')
+    options = parser.parse_args()
+    main(options)
+
+# vim:ts=4 sw=4 et
