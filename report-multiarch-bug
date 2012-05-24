@@ -42,8 +42,8 @@ An example diff between {{architectures[0]}} and {{architectures[1]}} is attache
 
 ''')
 
-extract_filenames_from_archdiff = re.compile(b'diff -ur [^/]+([^ ]+)').findall
-subst_archdiff_junk = re.compile(b'Only in .*\n').sub
+extract_filenames_from_archdiff = re.compile(b'^diff -ur [^/]+([^ ]+)', re.MULTILINE).findall
+subst_archdiff_junk = re.compile(b'^Only in .*\n', re.MULTILINE).sub
 
 subst_architecture = re.compile('(?<=_)[a-z0-9-]+(?=[.]deb$)').sub
 
