@@ -35,8 +35,9 @@ Usertags: multiarch
 
 {{package}} is marked as "Multi-Arch: same", but the following {{plural("file is", "files are", len(files))}} architecture-dependent:
 {% for file in files %}
-{{file}}
+{{file}}\
 {% endfor %}
+
 An example diff between {{architectures[0]}} and {{architectures[1]}} is attached.
 
 ''')
