@@ -38,11 +38,12 @@ Usertags: multiarch
 {{file}}\
 {% endfor %}
 
-An example diff between {{architectures[0]}} and {{architectures[1]}} is attached.
+An example diff between {{architectures[0]}} and {{architectures[1]}} {% if ungzipped %}(after ungzipping) {% endif %}is attached.
 
 ''')
 
 extract_filenames_from_archdiff = re.compile(b'^diff -ur [^/]+([^ ]+)', re.MULTILINE).findall
+extract_binary_filenames_from_archdiff = re.compile(b'^Binary files [^/]+([^ ]+)', re.MULTILINE).findall
 subst_archdiff_junk = re.compile(b'^Only in .*\n', re.MULTILINE).sub
 
 subst_architecture = re.compile('(?<=_)[a-z0-9-]+(?=[.]deb$)').sub
@@ -106,14 +107,33 @@ def main(options):
             strip_deb_suffix(filename)
         ]
         ipc.check_call(commandline)
-    commandline = ['diff', '-ur'] + [strip_deb_suffix(f) for f in files.keys()]
-    child = ipc.Popen(commandline, stdout=ipc.PIPE)
+    diff_commandline = ['diff', '-ur'] + [strip_deb_suffix(f) for f in files.keys()]
+    child = ipc.Popen(diff_commandline, stdout=ipc.PIPE)
     (archdiff, stderr) = child.communicate()
+    child = None
     archdiff = subst_archdiff_junk(b'', archdiff)
+    ungzipped = [
+        s.decode('ASCII')
+        for s in extract_binary_filenames_from_archdiff(archdiff)
+        if s.endswith(b'.gz')
+    ]
+    ungzipped = dict((f[:-3], f) for f in ungzipped)
+    if ungzipped:
+        ungzip_commandline = ['find', '-type', 'f', '-name', '*.gz', '-exec', 'gzip', '-d', '{}', '+']
+        ipc.check_call(ungzip_commandline)
+        child = ipc.Popen(diff_commandline, stdout=ipc.PIPE)
+        (archdiff, stderr) = child.communicate()
+        child = None
+        archdiff = subst_archdiff_junk(b'', archdiff)
     archdiff_affected = [
         s.decode('ASCII')
         for s in extract_filenames_from_archdiff(archdiff)
     ]
+    archdiff_affected += [
+        s.decode('ASCII')
+        for s in extract_binary_filenames_from_archdiff(archdiff)
+    ]
+    archdiff_affected = [ungzipped.get(file, file) for file in archdiff_affected]
     archdiff_filename = '{0}.archdiff'.format(os.path.commonprefix(files.keys())[:-1])
     with open(archdiff_filename, 'wb') as file:
         file.write(archdiff)
@@ -127,6 +147,7 @@ def main(options):
         plural=plural,
         len=len,
         files=archdiff_affected,
+        ungzipped=ungzipped,
     )
     if options.mutt:
         with open('template', 'wt') as file:
