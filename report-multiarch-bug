@@ -66,6 +66,12 @@ def get_email():
 def plural(x, y, n):
     return x if n == 1 else y
 
+class UserError(Exception):
+    pass
+
+class VersionError(UserError):
+    pass
+
 def main(options):
     cache = apt.Cache()
     packages = cache[options.package].versions
@@ -75,7 +81,7 @@ def main(options):
             if options.version is None or options.version == pkg.version
         ]
     except ValueError:
-        raise ValueError('wrong version: {0}'.format(
+        raise VersionError('select a version: {0}'.format(
             ', '.join(pkg.version for pkg in packages))
         )
     [uri] = package.uris
@@ -166,6 +172,9 @@ if __name__ == '__main__':
     parser.add_argument('package', metavar='<package>')
     parser.add_argument('version', metavar='<version>', nargs='?')
     options = parser.parse_args()
-    main(options)
+    try:
+        main(options)
+    except UserError as exc:
+        parser.error(exc)
 
 # vim:ts=4 sw=4 et
