@@ -72,6 +72,9 @@ class UserError(Exception):
 class VersionError(UserError):
     pass
 
+class NotMultiArchSame(UserError):
+    pass
+
 def main(options):
     cache = apt.Cache()
     packages = cache[options.package].versions
@@ -108,6 +111,10 @@ def main(options):
     for filename, file in files.items():
         if file.status != file.STAT_DONE:
             raise RuntimeError('fetching file failed ({0})'.format(filename))
+        commandline = ['dpkg-deb', '-I', filename, 'control']
+        control = ipc.check_output(commandline)
+        if b'\nMulti-Arch: same\n' not in control:
+            raise NotMultiArchSame('{file} is not "Multi-Arch: same"'.format(file=filename))
         commandline = ['dpkg-deb', '-x',
             filename,
             strip_deb_suffix(filename)
@@ -174,7 +181,10 @@ if __name__ == '__main__':
     options = parser.parse_args()
     try:
         main(options)
-    except UserError as exc:
+    except VersionError as exc:
         parser.error(exc)
+    except UserError as exc:
+        print('Error: {exc}'.format(exc=exc), file=sys.stderr)
+        sys.exit(1)
 
 # vim:ts=4 sw=4 et
