@@ -108,6 +108,9 @@ def main(options):
             if ('dpkg-source: error: ' + s) in log:
                 reason = s
                 break
+            if ('dpkg-source: ' + s) in log:
+                reason = s
+                break
     print(template.render(
         name=get_full_name(),
         email=get_email(),
