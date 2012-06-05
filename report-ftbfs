@@ -92,12 +92,9 @@ def main(options):
         log = log_file.read().decode('UTF-8', 'replace')
     finally:
         log_file.close()
-    source = re.findall('^Package: (.*)$', log, re.MULTILINE)[-1]
-    try:
-        version = re.findall('^Source-Version: (.*)$', log, re.MULTILINE)[-1]
-    except IndexError:
-        version = re.findall('^Version: (.*)$', log, re.MULTILINE)[0]
-    architecture = re.findall('^Architecture: (.*)$', log, re.MULTILINE)[-1]
+    source = re.search('^dpkg-buildpackage: source package (\S+)$', log, re.MULTILINE).group(1)
+    version = re.search('^dpkg-buildpackage: source version (\S+)$', log, re.MULTILINE).group(1)
+    architecture = re.search('^dpkg-buildpackage: host architecture (\S+)$', log, re.MULTILINE).group(1)
     if options.arch_specific:
         usertag = usertag_map.get(architecture, architecture)
         mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
