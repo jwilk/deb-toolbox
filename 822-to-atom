@@ -17,6 +17,7 @@ import datetime
 import email.utils
 import re
 import sys
+import tempfile
 
 import lxml.etree as etree
 
@@ -50,6 +51,16 @@ def fix_email(email):
     # work-around for bug #662024
     return re.sub('(.*@.*)(@debian[.]org)$', lambda m: m.group(1), email)
 
+def read_tag_file(file):
+    # work-around for http://bugs.debian.org/669458
+    contents = file.buffer.read()
+    with tempfile.TemporaryFile() as file:
+        file.write(contents)
+        file.flush()
+        file.seek(0)
+        for para in apt_pkg.TagFile(file):
+            yield para
+
 class converter(object):
 
     def get_title(self):
@@ -82,7 +93,7 @@ class converter(object):
         e_updated = elem(feed, 'updated')
         e_updated.text = rfc3339(datetime.datetime.utcnow())
         e_updated.tail += '\n';
-        for para in apt_pkg.TagFile(sys.stdin):
+        for para in read_tag_file(sys.stdin):
             uri = self.get_entry_uri(para)
             entry = elem(feed, 'entry')
             if uri is not None:
