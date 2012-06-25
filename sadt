@@ -231,9 +231,11 @@ class TestGroup(object):
     def _run(self, test, progress):
         path = os.path.join(self.tests_directory, test)
         chmod_x(path)
-        tmpdir = tempfile.mkdtemp(prefix='sadt')
+        tmpdir1 = tempfile.mkdtemp(prefix='sadt')
+        tmpdir2 = tempfile.mkdtemp(prefix='sadt')
         environ = dict(os.environ)
-        environ['TMPDIR'] = tmpdir
+        environ['ADTTMP'] = tmpdir1
+        environ['TMPDIR'] = tmpdir2 # only for compatiblity with old DEP-8 spec.
         child = ipc.Popen(['annotate-output', '+', path],
             stdout=ipc.PIPE,
             env=environ
@@ -247,7 +249,8 @@ class TestGroup(object):
             if line.startswith('E:'):
                 stderr = True
         rc = child.wait()
-        shutil.rmtree(tmpdir)
+        shutil.rmtree(tmpdir1)
+        shutil.rmtree(tmpdir2)
         if rc == 0:
             if stderr:
                 rc = -1
