@@ -21,9 +21,6 @@ simple implementation of DEP-8: automatic as-installed package testing
 * It's the user's responsibility to install any packages required to run tests.
 sadt will skip tests that don't have dependencies satisfied.
 
-* By default, sadt assumes that the source tree is unbuilt and therefore skips
-all tests that don't declare the "no-build-needed" feature.
-
 * If -b/--built-source-tree is used, it's the user's responsibility to actually
 build the package.
 
@@ -194,6 +191,8 @@ class TestGroup(object):
                     raise Skip('this test needs root privileges')
             elif r == 'breaks-testbed':
                 raise Skip('breaks-testbed restriction is not implemented; use adt-run')
+            elif r == 'build-needed':
+                raise Skip('source tree not built')
             else:
                 raise Skip('unknown restriction: %s' % r)
         if 'rw-build-tree' in restrictions:
@@ -204,14 +203,13 @@ class TestGroup(object):
         self.check_depends()
         self.check_restrictions(ignored_restrictions)
 
-    def run(self, test, progress, skip_reason=None, rw_build_tree=None):
+    def run(self, test, progress, rw_build_tree=None, built_source_tree=None):
         progress.start(test)
-        if skip_reason is not None:
-            progress.skip(skip_reason)
-            raise Skip(skip_reason)
         ignored_restrictions = set()
         if rw_build_tree:
             ignored_restrictions.add('rw-build-tree')
+        if built_source_tree:
+            ignored_restrictions.add('build-needed')
         try:
             self.check(ignored_restrictions)
         except Skip, exc:
@@ -330,10 +328,6 @@ def main():
                 if options.tests and name not in options.tests:
                     continue
                 try:
-                    if 'no-build-needed' in group.features or options.built_source_tree:
-                        skip_reason = None
-                    else:
-                        skip_reason = 'source tree not built'
                     if rw_build_tree is None:
                         try:
                             group.check()
@@ -344,8 +338,8 @@ def main():
                             pass
                     group.run(name,
                         progress=progress,
-                        skip_reason=skip_reason,
                         rw_build_tree=rw_build_tree,
+                        built_source_tree=options.built_source_tree
                     )
                 except Skip:
                     n_skip += 1
