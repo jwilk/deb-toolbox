@@ -8,6 +8,7 @@
 import argparse
 import collections
 import contextlib
+import functools
 import re
 import shutil
 import sys
@@ -18,9 +19,18 @@ import apt_pkg
 
 mentors_root = 'http://mentors.debian.net/debian'
 
+@functools.total_ordering
 class debversion(str):
+
     def __lt__(self, other):
         return apt_pkg.version_compare(self, other) < 0
+
+    def __eq__(self, other):
+        return apt_pkg.version_compare(self, other) < 0
+
+    def __hash__(self):
+        # not very efficient...
+        return 0
 
 class ArgumentParser(argparse.ArgumentParser):
 
