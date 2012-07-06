@@ -23,7 +23,7 @@ import jinja2
 template = jinja2.Template('''\
 From: {{name}} <{{email}}>
 To: submit@bugs.debian.org
-Subject: {{package}}: arch-dependent {{plural("file", "files", len(files))}} in "Multi-Arch: same" package
+Subject: {{package}}: arch-dependent {{plural("file", "files", files|length)}} in "Multi-Arch: same" package
 X-Debbugs-No-Ack: please
 X-Debbugs-CC: {{email}}
 
@@ -33,7 +33,7 @@ Severity: important
 User: multiarch-devel@lists.alioth.debian.org
 Usertags: multiarch
 
-{{package}} is marked as "Multi-Arch: same", but the following {{plural("file is", "files are", len(files))}} architecture-dependent:
+{{package}} is marked as "Multi-Arch: same", but the following {{plural("file is", "files are", files|length)}} architecture-dependent:
 {% for file in files %}
 {{file}}\
 {% endfor %}
@@ -158,7 +158,6 @@ def main(options):
         version=package.version,
         architectures=options.architectures,
         plural=plural,
-        len=len,
         files=archdiff_affected,
         ungzipped=ungzipped,
     )
