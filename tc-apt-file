@@ -31,13 +31,13 @@ def setup_proxies():
 
 def get_cache_filename(mkdir=True):
     home = xdg.cache_home
-    path = os.path.join(home, 'tc-apt-file')
+    path = os.path.join(home, 'debian')
     if mkdir:
         try:
             os.makedirs(path)
         except OSError:
             pass
-    return os.path.join(path, 'cache.tc')
+    return os.path.join(path, 'apt-file.tc')
 
 def do_update(options):
     mirror = 'http://ftp.debian.org/debian'
