@@ -79,6 +79,22 @@ Usertags: qa-doublebuild
 {{source}} FTBFS if built twice in a row:\
 ''')
 
+python_template = jinja2.Template('''\
+From: {{name}} <{{email}}>
+To: submit@bugs.debian.org
+Subject: {{source}}: FTBFS with Python {{python_version}}
+X-Debbugs-No-Ack: please
+X-Debbugs-CC: {{email}}
+
+Source: {{source}}
+Version: {{version}}
+Severity: important
+User: debian-python@lists.debian.org
+Usertags: python{{python_version}}
+
+{{source}} FTBFS if built against Python {{python_version}}:\
+''')
+
 def main(options):
     if options.mutt:
         sys.stdout = mail_template = tempfile.NamedTemporaryFile(mode='w+', prefix='report-ftbfs', suffix='.mail')
@@ -102,6 +118,7 @@ def main(options):
         usertag = mailinglist = None
     template = default_template
     reason = None
+    extra_context = {}
     if options.qa_doublebuild:
         template = qa_doublebuild_template
         for s in 'aborting due to unexpected upstream changes', 'unrepresentable changes to source':
@@ -111,7 +128,11 @@ def main(options):
             if ('dpkg-source: ' + s) in log:
                 reason = s
                 break
+    elif options.python:
+        template = python_template
+        extra_context['python_version'] = options.python
     print(template.render(
+        extra_context,
         name=get_full_name(),
         email=get_email(),
         source=source,
@@ -133,11 +154,19 @@ def main(options):
         mail_template.flush()
         ipc.check_call(['mutt', '-H', mail_template.name])
 
+def validate_python_version(v):
+    if re.match('^[23][.][0-9]+$', v):
+        return v
+    raise ValueError
+validate_python_version.__name__ = 'python version'
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--arch-specific', action='store_true')
     parser.add_argument('-m', '--mutt', action='store_true')
-    parser.add_argument('--qa-doublebuild', action='store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--qa-doublebuild', action='store_true')
+    group.add_argument('--python', type=validate_python_version)
     parser.add_argument('logname', metavar='<logfile>')
     options = parser.parse_args()
     main(options)
