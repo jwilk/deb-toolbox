@@ -26,7 +26,7 @@ class debversion(str):
         return apt_pkg.version_compare(self, other) < 0
 
     def __eq__(self, other):
-        return apt_pkg.version_compare(self, other) < 0
+        return apt_pkg.version_compare(self, other) == 0
 
     def __hash__(self):
         # not very efficient...
