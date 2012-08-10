@@ -1,0 +1,100 @@
+#!/usr/bin/python3
+
+# Copyright © 2012 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import collections
+import os
+import re
+import subprocess as ipc
+
+is_build_id = re.compile('^[0-9a-fA-F]{40,}$').match
+parse_readelf_n = re.compile(b'^\s+Build ID: ([0-9a-f]{40,})$').match
+dev_null = open(os.devnull, 'wb')
+
+def ident_to_path(ident):
+    if is_build_id(ident):
+        ident = ident.lower()
+        return '/usr/lib/debug/{0}/{1}'.format(ident[:2], ident[2:])
+    else:
+        return os.path.realpath(ident)
+
+def extract_build_id(path, quiet=False):
+    if quiet:
+        stderr = dev_null
+    else:
+        stderr = None
+    readelf = ipc.Popen(['readelf', '-n', path], stdout=ipc.PIPE, stderr=stderr)
+    build_id = None
+    for line in readelf.stdout:
+        if build_id is None:
+            match = parse_readelf_n(line)
+            if match is not None:
+                build_id = match.group(1).decode('ASCII')
+    if build_id is None:
+        readelf.wait()
+    if readelf.wait() != 0:
+        build_id = None
+    return build_id
+
+def get_maps():
+    source_map = collections.defaultdict(set)
+    binary_map = {}
+    dpkg = ipc.Popen(['dpkg-query', '-W', '-f', '${binary:Package} ${Source}\n'], stdout=ipc.PIPE)
+    for line in dpkg.stdout:
+        line = line.decode('ASCII').rstrip()
+        binpkg, *source = line.split()
+        if not source:
+            source = [binpkg]
+        source = source[0]
+        source_map[source].add(binpkg)
+        binary_map[binpkg] = source
+    if dpkg.wait() != 0:
+        raise IOError
+    return source_map, binary_map
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('idents', metavar='BUILD-ID-OR-FILE', nargs='+')
+    options = ap.parse_args()
+    paths = [ident_to_path(i) for i in options.idents]
+    interesting_build_ids = set()
+    for path in paths:
+        build_id = extract_build_id(path)
+        if build_id is None:
+            raise ValueError('cannot determine build-id: {path}'.format(path=path))
+        interesting_build_ids.add(build_id)
+    dpkg = ipc.Popen(['dpkg', '-S'] + paths, stdout=ipc.PIPE)
+    source_map, binary_map = get_maps()
+    packages = set()
+    for line in dpkg.stdout:
+        line = line.decode('ASCII', 'replace')
+        for p in line.split(':', 1)[0].split(','):
+            p = p.strip()
+            packages |= source_map[binary_map[p]]
+    if dpkg.wait() != 0:
+        raise IOError
+    dpkg = ipc.Popen(['dpkg', '-L'] + list(packages), stdout=ipc.PIPE)
+    for line in dpkg.stdout:
+        assert line[-1] == b'\n'[0]
+        path = line[:-1]
+        del line
+        if os.path.islink(path):
+            continue
+        if os.path.isdir(path):
+            continue
+        if path.startswith(b'/usr/lib/debug/'):
+            continue
+        build_id = extract_build_id(path, quiet=True)
+        if build_id in interesting_build_ids:
+            print(build_id, path.decode('ASCII'), sep='\t')
+    if dpkg.wait() != 0:
+        raise IOError
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
