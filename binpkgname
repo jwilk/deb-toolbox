@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $python_re = qr{^
+( /usr/lib/pymodules/python2\.\d+/
+| /usr/lib/python2\.\d+/(?:site|dist)-packages/
+| /usr/share/pyshared/
+| /usr/share/python-support/[^/]+/
+)
+}x;
+
+my $python3_re = qr{^
+  /usr/lib/python3/dist-packages/
+}x;
+
+my $shlib_re = qr{^
+(?: /usr )? /lib/.* # directory part
+(?<=/) lib [^/]+ \.so (?: \.[^/]+ )? # filename part
+$
+}x;
+
+sub python_file_to_package {
+    ($_, my $version) = @_;
+    my $suffix = '';
+    if ($version >= 3) {
+        if ($version >= 3 and s{\.cpython-\d+(d?)[^.]+\.so$}{}) {
+            $suffix = '-dbg' if $1;
+        } elsif ($version <= 2 and s{_d\.so$}{}) {
+            $suffix = '-dbg';
+        } elsif (s{\.so$}{} or s{\.py$}{}) {
+            # pass
+        } else {
+            die;
+        }
+    }
+    s{/__init__}{};
+    s{/}{.}g;
+    y{A-Z_}{a-z-};
+    if ($version eq 2) {
+        $version = '';
+    }
+    return "python$version-$_$suffix";
+}
+
+sub file_to_package {
+    ($_) = @_;
+    m{^/} or die;
+    s{//+}{/}g;
+    if (s{$python_re}{}) {
+        return python_file_to_package($_, 2);
+    } elsif (s{$python3_re}{}) {
+        return python_file_to_package($_, 3);
+    } elsif (m{$shlib_re}) {
+        my $soname;
+        open(my $fh, '-|', 'readelf', '-d', $_) or die;
+        while (<$fh>) {
+            if (m{Library soname:\s+\[(.+)\]}) {
+                $soname = $1;
+                last;
+            }
+        }
+        close($fh) or die;
+        defined($soname) or die;
+        $_ = $soname;
+        s{([0-9])\.so\.}{$1-};
+        s{\.so(?:\.|$)}{};
+        y{A-Z_}{a-z-};
+        return $_;
+    }
+    die;
+}
+
+for my $file (@ARGV) {
+    my $pkgname = file_to_package($file);
+    print "$pkgname: $file\n";
+}
+
+# vim:ts=4 sw=4 et
