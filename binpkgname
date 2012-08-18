@@ -22,6 +22,7 @@ $
 }x;
 
 sub python_file_to_package {
+    # Debian Python Policy §2.2
     ($_, my $version) = @_;
     my $suffix = '';
     if ($version >= 3) {
@@ -53,6 +54,7 @@ sub file_to_package {
     } elsif (s{$python3_re}{}) {
         return python_file_to_package($_, 3);
     } elsif (m{$shlib_re}) {
+        # Debian Policy §8.1
         my $soname;
         open(my $fh, '-|', 'readelf', '-d', $_) or die;
         while (<$fh>) {
