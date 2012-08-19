@@ -45,6 +45,25 @@ sub python_file_to_package {
     return "python$version-$_$suffix";
 }
 
+sub shlib_to_package {
+    # Debian Policy §8.1
+    my $soname;
+    open(my $fh, '-|', 'readelf', '-d', $_) or die;
+    while (<$fh>) {
+        if (m{Library soname:\s+\[(.+)\]}) {
+            $soname = $1;
+            last;
+        }
+    }
+    close($fh) or die;
+    defined($soname) or die;
+    $_ = $soname;
+    s{([0-9])\.so\.}{$1-};
+    s{\.so(?:\.|$)}{};
+    y{A-Z_}{a-z-};
+    return $_;
+}
+
 sub file_to_package {
     ($_) = @_;
     m{^/} or die;
@@ -54,22 +73,7 @@ sub file_to_package {
     } elsif (s{$python3_re}{}) {
         return python_file_to_package($_, 3);
     } elsif (m{$shlib_re}) {
-        # Debian Policy §8.1
-        my $soname;
-        open(my $fh, '-|', 'readelf', '-d', $_) or die;
-        while (<$fh>) {
-            if (m{Library soname:\s+\[(.+)\]}) {
-                $soname = $1;
-                last;
-            }
-        }
-        close($fh) or die;
-        defined($soname) or die;
-        $_ = $soname;
-        s{([0-9])\.so\.}{$1-};
-        s{\.so(?:\.|$)}{};
-        y{A-Z_}{a-z-};
-        return $_;
+        return shlib_to_package($_);
     }
     die;
 }
