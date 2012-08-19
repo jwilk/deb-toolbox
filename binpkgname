@@ -15,6 +15,12 @@ my $python3_re = qr{^
   /usr/lib/python3/dist-packages/
 }x;
 
+my $perl_re = qr{
+( /usr/share/perl5/
+| /usr/lib/perl5/
+)
+}x;
+
 my $shlib_re = qr{^
 (?: /usr )? /lib/.* # directory part
 (?<=/) lib [^/]+ \.so (?: \.[^/]+ )? # filename part
@@ -45,6 +51,16 @@ sub python_file_to_package {
     return "python$version-$_$suffix";
 }
 
+sub perl_file_to_package {
+    # Debian Perl Policy §4.2
+    ($_) = @_;
+    s{\.pm$}{} or s{auto/(.+)(?:[.](?:bs|so))}{$1};
+    s{/$}{}g;
+    s{/}{-}g;
+    y{A-Z_}{a-z-};
+    return "lib$_-perl";
+}
+
 sub shlib_to_package {
     # Debian Policy §8.1
     my $soname;
@@ -72,6 +88,8 @@ sub file_to_package {
         return python_file_to_package($_, 2);
     } elsif (s{$python3_re}{}) {
         return python_file_to_package($_, 3);
+    } elsif (s{$perl_re}{}) {
+        return perl_file_to_package($_, 3);
     } elsif (m{$shlib_re}) {
         return shlib_to_package($_);
     }
