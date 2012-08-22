@@ -46,6 +46,8 @@ Debian Python Policy, version 0.9.4.2
 use strict;
 use warnings;
 
+use Getopt::Long qw(:config gnu_getopt auto_help);
+
 my $python_re = qr{^
 ( /usr/lib/pymodules/python2\.\d+/
 | /usr/lib/python2\.\d+/(?:site|dist)-packages/
@@ -139,6 +141,7 @@ sub file_to_package {
     die;
 }
 
+GetOptions();
 for my $file (@ARGV) {
     my $pkgname = file_to_package($file);
     print "$pkgname: $file\n";
