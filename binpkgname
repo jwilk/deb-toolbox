@@ -20,6 +20,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+=head1 NAME
+
+binpkgname - determine binary package name
+
+=head1 SYNOPSIS
+
+B<binpkgname> I<file>...
+
+=head1 DESCRIPTION
+
+B<binpkgname> determines policy-compliant binary package name for the specified
+file.  The file can be a shared library, a Perl module, or a Python module.
+
+=head1 CONFROMS TO
+
+Debian Policy, version 3.9.3
+
+Debian Perl Policy, version 3.9.3
+
+Debian Python Policy, version 0.9.4.2
+
+=cut
+
 use strict;
 use warnings;
 
