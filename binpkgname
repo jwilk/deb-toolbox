@@ -76,16 +76,14 @@ sub python_file_to_package {
     # Debian Python Policy §2.2
     ($_, my $version) = @_;
     my $suffix = '';
-    if ($version >= 3) {
-        if ($version >= 3 and s{\.cpython-\d+(d?)[^.]+\.so$}{}) {
-            $suffix = '-dbg' if $1;
-        } elsif ($version <= 2 and s{_d\.so$}{}) {
-            $suffix = '-dbg';
-        } elsif (s{\.so$}{} or s{\.py$}{}) {
-            # pass
-        } else {
-            die;
-        }
+    if ($version >= 3 and s{\.cpython-\d+(d?)[^.]+\.so$}{}) {
+        $suffix = '-dbg' if $1;
+    } elsif ($version <= 2 and s{_d\.so$}{}) {
+        $suffix = '-dbg';
+    } elsif (s{\.so$}{} or s{\.py$}{}) {
+        # pass
+    } else {
+        die;
     }
     s{/__init__}{};
     s{/}{.}g;
