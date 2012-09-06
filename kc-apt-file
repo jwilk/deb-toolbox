@@ -42,7 +42,7 @@ def get_cache_filename(mkdir=True):
     return os.path.join(path, 'apt-file.kch')
 
 def do_update(options):
-    mirror = 'http://ftp.debian.org/debian'
+    mirror = 'http://http.debian.net/debian'
     distribution = 'unstable'
     architecture = 'i386'
     parse = re.compile(b'^(.*\S)\s+(\S+)$').match
@@ -117,7 +117,7 @@ def main():
         help='use this cache file (default: {path})'.format(path=get_cache_filename(mkdir=False))
     )
     subparsers = parser.add_subparsers(dest='command')
-    subparsers.add_parser('update', help='download indices from ftp.debian.org')
+    subparsers.add_parser('update', help='download indices from a Debian mirror')
     cmd_list = subparsers.add_parser('list', help='list files of the package(s)')
     cmd_list.add_argument('packages', metavar='PACKAGE', nargs='+')
     cmd_list.add_argument('-E', '--regexp', action='store_true')
