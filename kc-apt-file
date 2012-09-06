@@ -12,24 +12,25 @@ apt-file replacement with Tokyo Cabinet backend
 
 import argparse
 import collections
+import gzip
 import io
 import os
 import re
+import shutil
 import subprocess as ipc
+import sys
+import tempfile
 import zlib
 
+import apt
 import apt_pkg
+
 import kyotocabinet as kc
 
 class xdg(object):
     cache_home = os.environ.get('XDG_CACHE_HOME') or ''
     if not os.path.isabs(cache_home):
         cache_home = os.path.join(os.path.expanduser('~'), '.cache')
-
-def setup_proxies():
-    apt_pkg.init_config()
-    os.environ['http_proxy'] = apt_pkg.config.get('Acquire::http::Proxy', '')
-    os.environ['ftp_proxy'] = apt_pkg.config.get('Acquire::ftp::Proxy', '')
 
 def get_cache_filename(mkdir=True):
     home = xdg.cache_home
@@ -41,26 +42,56 @@ def get_cache_filename(mkdir=True):
             pass
     return os.path.join(path, 'apt-file.kch')
 
+class AcquireProgress(apt.progress.text.AcquireProgress):
+    def __init__(self):
+        apt.progress.text.AcquireProgress.__init__(self, outfile=sys.stderr)
+
+class AcquireFailed(RuntimeError):
+    pass
+
+class Acquire(apt_pkg.Acquire):
+
+    def run(self):
+        rc = apt_pkg.Acquire.run(self)
+        if rc != self.RESULT_CONTINUE:
+            raise AcquireFailed('fetching files failed')
+        for file in self.items:
+            if file.status != file.STAT_DONE:
+                raise AcquireFailed('fetching file failed: {uri}'.format(uri=file.desc_uri))
+
 def do_update(options):
     mirror = 'http://http.debian.net/debian'
     distribution = 'unstable'
     architecture = 'i386'
     parse = re.compile(b'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
-    for section in {'main', 'contrib', 'non-free'}:
-        url = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(mirror=mirror, dist=distribution, section=section, arch=architecture)
-        child = ipc.Popen('wget -O- -q {} | gzip -dc'.format(url), shell=True, stdout=ipc.PIPE, bufsize=-1)
-        skip = True
-        for line in child.stdout:
-            if skip:
-                if line.startswith(b'FILE'):
-                    skip = False
-            else:
-                filename, packages = parse(line).groups()
-                for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
-                    data[package] += [filename]
-        if child.wait() != 0:
-            raise IOError
+    progress = AcquireProgress()
+    fetcher = Acquire(progress)
+    files = {}
+    tmpdir = tempfile.mkdtemp(prefix='kc-apt-file.')
+    try:
+        for section in {'main', 'contrib', 'non-free'}:
+            uri = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(mirror=mirror, dist=distribution, section=section, arch=architecture)
+            files[section] = apt_pkg.AcquireFile(fetcher,
+                uri=uri,
+                descr='{dist}/{section}/Contents-{arch}'.format(dist=distribution, section=section, arch=architecture),
+                destfile=os.path.join(tmpdir, section),
+            )
+        fetcher.run()
+        for file in files.values():
+            with gzip.open(file.destfile) as file:
+                contents = file.read()
+            skip = True
+            for line in io.BytesIO(contents):
+                if skip:
+                    if line.startswith(b'FILE'):
+                        skip = False
+                else:
+                    filename, packages = parse(line).groups()
+                    for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
+                        data[package] += [filename]
+    finally:
+        shutil.rmtree(tmpdir)
     db = kc.DB()
     db.open(options.cache_file, db.OWRITER | db.OCREATE | db.OTRUNCATE)
     try:
@@ -111,7 +142,6 @@ def do_search(options):
         db.close()
 
 def main():
-    setup_proxies()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cache-file',
         help='use this cache file (default: {path})'.format(path=get_cache_filename(mkdir=False))
