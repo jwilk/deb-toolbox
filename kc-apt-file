@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # encoding=UTF-8
 
 # Copyright © 2011, 2012 Jakub Wilk <jwilk@debian.org>
@@ -12,12 +12,14 @@ apt-file replacement with Tokyo Cabinet backend
 
 import argparse
 import collections
+import io
 import os
 import re
 import subprocess as ipc
+import zlib
 
 import apt_pkg
-import pytc
+import kyotocabinet as kc
 
 class xdg(object):
     cache_home = os.environ.get('XDG_CACHE_HOME') or ''
@@ -37,36 +39,35 @@ def get_cache_filename(mkdir=True):
             os.makedirs(path)
         except OSError:
             pass
-    return os.path.join(path, 'apt-file.tc')
+    return os.path.join(path, 'apt-file.kch')
 
 def do_update(options):
     mirror = 'http://ftp.debian.org/debian'
     distribution = 'unstable'
     architecture = 'i386'
-    parse = re.compile('^(.*\S)\s+(\S+)$').match
+    parse = re.compile(b'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
-    for section in 'main', 'contrib', 'non-free':
+    for section in {'main', 'contrib', 'non-free'}:
         url = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(mirror=mirror, dist=distribution, section=section, arch=architecture)
-        child = ipc.Popen('wget -O- -q {} | gzip -dc'.format(url), shell=True, stdout=ipc.PIPE)
+        child = ipc.Popen('wget -O- -q {} | gzip -dc'.format(url), shell=True, stdout=ipc.PIPE, bufsize=-1)
         skip = True
         for line in child.stdout:
             if skip:
-                if line.startswith('FILE'):
+                if line.startswith(b'FILE'):
                     skip = False
             else:
                 filename, packages = parse(line).groups()
-                for package in [pkg.split('/')[-1] for pkg in packages.split(',')]:
+                for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
                     data[package] += [filename]
         if child.wait() != 0:
             raise IOError
-    hdb = pytc.HDB()
-    hdb.tune(bnum=65521, apow=4, fpow=10, opts=pytc.HDBTDEFLATE)
-    hdb.open(options.cache_file, pytc.HDBOWRITER | pytc.HDBOCREAT | pytc.HDBOTRUNC)
+    db = kc.DB()
+    db.open(options.cache_file, db.OWRITER | db.OCREATE | db.OTRUNCATE)
     try:
-        for package, filenames in data.iteritems():
-            hdb.putasync(package, '\n'.join(filenames))
+        for package, filenames in data.items():
+            db[package] = zlib.compress(b'\n'.join(filenames), 1)
     finally:
-        hdb.close()
+        db.close()
 
 def strings_to_regexp(strings, regexp=False, whole=True):
     if regexp:
@@ -80,30 +81,34 @@ def strings_to_regexp(strings, regexp=False, whole=True):
 def do_list(options):
     regexp = strings_to_regexp(options.packages, options.regexp)
     matching = re.compile(regexp).search
-    hdb = pytc.HDB()
-    hdb.open(options.cache_file, pytc.HDBOREADER)
+    db = kc.DB()
+    db.open(options.cache_file, db.OREADER)
     try:
-        hdb.iterinit()
-        for package in hdb.iterkeys():
+        for package in db:
+            package = package.decode('ASCII')
             if matching(package):
-                for filename in hdb[package].splitlines():
-                    print '{pkg}: /{file}'.format(pkg=package, file=filename)
+                filenames = zlib.decompress(db[package]).decode('UTF-8')
+                filenames = filenames.splitlines()
+                for filename in filenames:
+                    print('{pkg}: /{file}'.format(pkg=package, file=filename))
     finally:
-        hdb.close()
+        db.close()
 
 def do_search(options):
     regexp = strings_to_regexp(options.terms, options.regexp, whole=False)
     matching = re.compile(regexp).search
-    hdb = pytc.HDB()
-    hdb.open(options.cache_file, pytc.HDBOREADER)
+    db = kc.DB()
+    db.open(options.cache_file, db.OREADER)
     try:
-        hdb.iterinit()
-        for package, filenames in hdb.iteritems():
-            for filename in filenames.splitlines():
+        for package in db:
+            filenames = zlib.decompress(db[package]).decode('UTF-8')
+            filenames = filenames.splitlines()
+            package = package.decode('ASCII')
+            for filename in filenames:
                 if matching('/' + filename):
-                    print '{pkg}: /{file}'.format(pkg=package, file=filename)
+                    print('{pkg}: /{file}'.format(pkg=package, file=filename))
     finally:
-        hdb.close()
+        db.close()
 
 def main():
     setup_proxies()
