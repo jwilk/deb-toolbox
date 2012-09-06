@@ -79,17 +79,17 @@ def do_update(options):
             )
         fetcher.run()
         for file in files.values():
-            with gzip.open(file.destfile) as file:
-                contents = file.read()
             skip = True
-            for line in io.BytesIO(contents):
-                if skip:
-                    if line.startswith(b'FILE'):
-                        skip = False
-                else:
-                    filename, packages = parse(line).groups()
-                    for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
-                        data[package] += [filename]
+            with gzip.open(file.destfile) as file:
+                for line in file:
+                    if skip:
+                        if line.startswith(b'FILE'):
+                            skip = False
+                    else:
+                        filename, packages = parse(line).groups()
+                        for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
+                            data[package] += [filename]
+            contents = None
     finally:
         shutil.rmtree(tmpdir)
     db = kc.DB()
@@ -97,6 +97,7 @@ def do_update(options):
     try:
         for package, filenames in data.items():
             db[package] = zlib.compress(b'\n'.join(filenames), 1)
+            filenames[:] = []
     finally:
         db.close()
 
