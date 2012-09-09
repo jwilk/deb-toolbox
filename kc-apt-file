@@ -151,10 +151,20 @@ def do_search(options):
     finally:
         db.close()
 
+class default_architecture(object):
+
+    def __init__(self):
+        self._cache = None
+
+    def __str__(self):
+        if self._cache is None:
+            self._cache = ipc.getoutput('dpkg --print-architecture').strip()
+        return self._cache
+
 class default:
     mirror = 'http://http.debian.net/debian'
     distribution = 'unstable'
-    architecture = 'i386'
+    architecture = default_architecture()
     sections = ['main', 'contrib', 'non-free']
 
 def main():
@@ -168,7 +178,7 @@ def main():
         help='Debian mirror to use (default: {mirror})'.format(mirror=default.mirror)
     )
     cmd_update.add_argument('-a', '--architecture', default=default.architecture,
-        help='architecture to use (default: {arch})'.format(arch=default.architecture)
+        help='architecture to use'
     )
     cmd_update.add_argument('-d', '--distribution', default=default.distribution,
         help='distribution to use (default: {dist})'.format(dist=default.distribution)
