@@ -65,8 +65,11 @@ def do_update(options):
     architecture = 'i386'
     parse = re.compile(b'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
-    progress = AcquireProgress()
-    fetcher = Acquire(progress)
+    if options.quiet:
+        fetcher = Acquire()
+    else:
+        progress = AcquireProgress()
+        fetcher = Acquire(progress)
     files = {}
     tmpdir = tempfile.mkdtemp(prefix='kc-apt-file.')
     try:
@@ -148,7 +151,8 @@ def main():
         help='use this cache file (default: {path})'.format(path=get_cache_filename(mkdir=False))
     )
     subparsers = parser.add_subparsers(dest='command')
-    subparsers.add_parser('update', help='download indices from a Debian mirror')
+    cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
+    cmd_update.add_argument('-q', '--quiet', action='store_true')
     cmd_list = subparsers.add_parser('list', help='list files of the package(s)')
     cmd_list.add_argument('packages', metavar='PACKAGE', nargs='+')
     cmd_list.add_argument('-E', '--regexp', action='store_true')
