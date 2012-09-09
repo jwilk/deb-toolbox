@@ -60,9 +60,6 @@ class Acquire(apt_pkg.Acquire):
                 raise AcquireFailed('fetching file failed: {uri}'.format(uri=file.desc_uri))
 
 def do_update(options):
-    mirror = 'http://http.debian.net/debian'
-    distribution = 'unstable'
-    architecture = 'i386'
     parse = re.compile(b'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
     if options.quiet:
@@ -73,11 +70,20 @@ def do_update(options):
     files = {}
     tmpdir = tempfile.mkdtemp(prefix='kc-apt-file.')
     try:
-        for section in {'main', 'contrib', 'non-free'}:
-            uri = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(mirror=mirror, dist=distribution, section=section, arch=architecture)
+        for section in options.sections:
+            uri = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(
+                mirror=options.mirror,
+                dist=options.distribution,
+                section=section,
+                arch=options.architecture
+            )
             files[section] = apt_pkg.AcquireFile(fetcher,
                 uri=uri,
-                descr='{dist}/{section}/Contents-{arch}'.format(dist=distribution, section=section, arch=architecture),
+                descr='{dist}/{section}/Contents-{arch}'.format(
+                    dist=options.distribution,
+                    section=section,
+                    arch=options.architecture
+                ),
                 destfile=os.path.join(tmpdir, section),
             )
         fetcher.run()
@@ -145,6 +151,12 @@ def do_search(options):
     finally:
         db.close()
 
+class default:
+    mirror = 'http://http.debian.net/debian'
+    distribution = 'unstable'
+    architecture = 'i386'
+    sections = ['main', 'contrib', 'non-free']
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cache-file',
@@ -152,6 +164,18 @@ def main():
     )
     subparsers = parser.add_subparsers(dest='command')
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
+    cmd_update.add_argument('-m', '--mirror', default=default.mirror,
+        help='Debian mirror to use (default: {mirror})'.format(mirror=default.mirror)
+    )
+    cmd_update.add_argument('-a', '--architecture', default=default.architecture,
+        help='architecture to use (default: {arch})'.format(arch=default.architecture)
+    )
+    cmd_update.add_argument('-d', '--distribution', default=default.distribution,
+        help='distribution to use (default: {dist})'.format(dist=default.distribution)
+    )
+    cmd_update.add_argument('-s', '--sections', metavar='SECTION', nargs='+', default=default.sections,
+        help='distribution to use (default: {sections})'.format(sections=', '.join(default.sections))
+    )
     cmd_update.add_argument('-q', '--quiet', action='store_true')
     cmd_list = subparsers.add_parser('list', help='list files of the package(s)')
     cmd_list.add_argument('packages', metavar='PACKAGE', nargs='+')
