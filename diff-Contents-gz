@@ -92,7 +92,7 @@ for filename in filenames:
 
 print('Writing results', file=sys.stderr)
 
-n_archs = len(sys.argv) - 1
+n_archs = len(frozenset(arch_map.values()))
 for package, package_data in sorted(data.items()):
     groups = collections.defaultdict(list)
     for filename, archs in package_data.items():
