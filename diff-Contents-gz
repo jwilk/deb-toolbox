@@ -64,7 +64,7 @@ def new_package_dict():
 data = collections.defaultdict(new_package_dict)
 
 for filename in sys.argv[1:]:
-    basename, _ = os.path.splitext(filename)
+    basename, _ = os.path.splitext(os.path.basename(filename))
     arch = Arch(basename.split('-', 1)[1])
     print('Reading {}'.format(filename), file=sys.stderr)
     with gzip.open(filename) as file:
