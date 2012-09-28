@@ -25,7 +25,9 @@ class Arch(object):
         try:
             return Arch._cache[name]
         except KeyError:
-            return object.__new__(cls)
+            new = object.__new__(cls)
+            Arch._cache[name] = new
+            return new
 
     def __init__(self, name):
         self._name = name
