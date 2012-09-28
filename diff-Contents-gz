@@ -63,10 +63,17 @@ def new_package_dict():
 
 data = collections.defaultdict(new_package_dict)
 
-for filename in sys.argv[1:]:
+arch_map = {}
+filenames = sys.argv[1:]
+
+for filename in filenames:
     basename, _ = os.path.splitext(os.path.basename(filename))
     arch = Arch(basename.split('-', 1)[1])
+    arch_map[filename] = arch
+
+for filename in filenames:
     print('Reading {}'.format(filename), file=sys.stderr)
+    arch = arch_map[filename]
     with gzip.open(filename) as file:
         skip = True
         for line in file:
