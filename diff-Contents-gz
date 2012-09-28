@@ -10,6 +10,7 @@ import os
 import collections
 import subprocess
 import re
+import gzip
 
 bitbucket = open(os.devnull, 'w')
 
@@ -66,14 +67,9 @@ for filename in sys.argv[1:]:
     basename, _ = os.path.splitext(filename)
     arch = Arch(basename.split('-', 1)[1])
     print('Reading {}'.format(filename), file=sys.stderr)
-    zcat = subprocess.Popen(
-        ['zcat', '--', filename],
-        stdout=subprocess.PIPE,
-        stderr=bitbucket,
-    )
-    try:
+    with gzip.open(filename) as file:
         skip = True
-        for line in zcat.stdout:
+        for line in file:
             if skip:
                 if line.startswith(b'FILE'):
                     skip = False
@@ -84,10 +80,6 @@ for filename in sys.argv[1:]:
             for package in packages:
                 package = package.rsplit('/', 1)[-1]
                 data[package][filename].add(arch)
-    finally:
-        rc = zcat.wait()
-        if rc != 0:
-            raise subprocess.CalledProcessError(rc, 'zcat')
 
 print('Writing results', file=sys.stderr)
 
