@@ -9,7 +9,7 @@ import collections
 import gzip
 import os
 import re
-import subprocess
+import subprocess as ipc
 import sys
 
 bitbucket = open(os.devnull, 'w')
@@ -31,31 +31,15 @@ class Arch(object):
 
     def __init__(self, name):
         self._name = name
-        dpkg = subprocess.Popen(
-            ['dpkg-architecture', '-a{}'.format(name), '-l'],
-            stdout=subprocess.PIPE,
-            stderr=bitbucket,
-        )
-        try:
-            lines = (
-                line.decode('ASCII').rstrip().split('=', 1)[1]
-                for line in dpkg.stdout
-            )
-            lines = (
-                line for line in lines
-                if not line.isdigit() and not line in ('big', 'little')
-            )
-            lines = sorted(lines, key=arch_string_key)
-        finally:
-            rc = dpkg.wait()
-            if rc != 0:
-                raise subprocess.CalledProcessError(rc, 'dpkg-architecture')
-        self._re = re.compile(r'\b({})\b'.format('|'.join(re.escape(x) for x in lines)).encode('ASCII'))
+        multiarch = ipc.check_output(['dpkg-architecture', '-a' + name, '-qDEB_HOST_MULTIARCH']).strip()
+        wb = br'\b'
+        self._multiarch_sub = re.compile(wb + multiarch + wb).sub
+        self._build_id_sub = re.compile(br'(?<=/[.]build-id/)[0-9a-f]{2}/[0-9a-f]{38}[.]debug$').sub
 
     def replace(self, s):
+        s = self._multiarch_sub(b'${DEB_HOST_MULTIARCH}', s)
+        s = self._build_id_sub(b'*/*.debug', s)
         return s
-        # FIXME: it used to be:
-        return re.sub(self._re, b'*', s)
 
     def __str__(self):
         return self._name
