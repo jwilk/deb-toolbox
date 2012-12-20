@@ -35,7 +35,7 @@ try:
     try:
         ipc.check_call(sbuild_args)
     finally:
-        ipc.check_call(['cp', '-v', '-d', '-f', '-t', cwd, '--'] + glob.glob('*'))
+        ipc.check_call(['cp', '-v', '-L', '-f', '-t', cwd, '--'] + glob.glob('*'))
 except ipc.CalledProcessError as ex:
     print('E:', ' '.join(map(pipes.quote, ex.cmd)))
     sys.exit(1)
