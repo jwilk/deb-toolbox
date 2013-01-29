@@ -35,6 +35,8 @@ import stat
 import subprocess as ipc
 import sys
 import tempfile
+import threading
+import Queue as queuemod
 
 import debian.deb822 as deb822
 
@@ -49,6 +51,38 @@ def chmod_x(path):
 
 def split_on_comma(s, re=re.compile('\s*,\s*')):
     return re.split(s)
+
+def annotate_output(child):
+    queue = queuemod.Queue()
+    def reader(fd, tag):
+        buf = ''
+        while True:
+            assert '\n' not in buf
+            chunk = os.read(fd, 1024)
+            if chunk == '':
+                break
+            lines = (buf + chunk).split('\n')
+            buf = lines.pop()
+            for line in lines:
+                queue.put((tag, line + '\n'))
+        if buf != '':
+            queue.put((tag, buf))
+        queue.put(None)
+    queue = queuemod.Queue()
+    threads = []
+    for pipe, tag in [(child.stdout, 'O'), (child.stderr, 'E')]:
+        thread = threading.Thread(target=reader, args=(pipe.fileno(), tag))
+        thread.start()
+        threads += [thread]
+    nthreads = len(threads)
+    while nthreads > 0:
+        item = queue.get()
+        if item is None:
+            nthreads -= 1
+            continue
+        yield item
+    for thread in threads:
+        thread.join()
 
 class Skip(Exception):
     pass
@@ -234,18 +268,18 @@ class TestGroup(object):
         environ = dict(os.environ)
         environ['ADTTMP'] = tmpdir1
         environ['TMPDIR'] = tmpdir2 # only for compatiblity with old DEP-8 spec.
-        child = ipc.Popen(['annotate-output', '+', path],
+        child = ipc.Popen([path],
             stdout=ipc.PIPE,
-            env=environ
+            stderr=ipc.PIPE,
+            env=environ,
         )
         output = []
         stderr = False
-        for i, line in enumerate(child.stdout):
+        for tag, line in annotate_output(child):
             progress.ping()
-            line = line.lstrip()
-            output += [line]
-            if line.startswith('E:'):
+            if tag == 'E':
                 stderr = True
+            output += ['%s: %s' % (tag, line)]
         rc = child.wait()
         shutil.rmtree(tmpdir1)
         shutil.rmtree(tmpdir2)
