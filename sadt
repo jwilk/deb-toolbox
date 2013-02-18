@@ -237,9 +237,9 @@ class TestGroup(object):
         self.check_depends()
         self.check_restrictions(ignored_restrictions)
 
-    def run(self, test, progress, rw_build_tree=None, built_source_tree=None):
+    def run(self, test, progress, ignored_restrictions=(), rw_build_tree=None, built_source_tree=None):
         progress.start(test)
-        ignored_restrictions = set()
+        ignored_restrictions = set(ignored_restrictions)
         if rw_build_tree:
             ignored_restrictions.add('rw-build-tree')
         if built_source_tree:
@@ -326,9 +326,11 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
     parser.add_argument('-b', '--built-source-tree', action='store_true', help='assume built source tree')
+    parser.add_argument('--ignore-restrictions', metavar='<restr>[,<restr>...]', help='ignore specified restrictions', default='')
     parser.add_argument('tests', metavar='<test-name>', nargs='*', help='tests to run')
     options = parser.parse_args()
     options.tests = frozenset(options.tests)
+    options.ignore_restrictions = frozenset(options.ignore_restrictions.split(','))
     binary_packages = set()
     with open('debian/control') as file:
         for n, para in enumerate(deb822.Packages.iter_paragraphs(file)):
@@ -372,6 +374,7 @@ def main():
                             pass
                     group.run(name,
                         progress=progress,
+                        ignored_restrictions=options.ignore_restrictions,
                         rw_build_tree=rw_build_tree,
                         built_source_tree=options.built_source_tree
                     )
