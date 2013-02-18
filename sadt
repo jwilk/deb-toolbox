@@ -234,8 +234,15 @@ class TestGroup(object):
             raise RwBuildTreeNeeded
 
     def check(self, ignored_restrictions=()):
+        exc = None
+        try:
+            self.check_restrictions(ignored_restrictions)
+        except RwBuildTreeNeeded, exc:
+            # this will be handled separately
+            pass
         self.check_depends()
-        self.check_restrictions(ignored_restrictions)
+        if exc is not None:
+            raise exc
 
     def run(self, test, progress, ignored_restrictions=(), rw_build_tree=None, built_source_tree=None):
         progress.start(test)
