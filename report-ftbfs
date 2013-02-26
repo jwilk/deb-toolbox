@@ -43,6 +43,8 @@ usertag_map = {
     'amd64': None,
     'armel': 'eabi',
     'i386': None,
+    'kfreebsd-amd64': 'kfreebsd',
+    'kfreebsd-i386': 'kfreebsd',
 }
 
 default_template = jinja2.Template('''\
