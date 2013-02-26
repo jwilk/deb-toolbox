@@ -32,6 +32,7 @@ def get_email():
 mailinglist_map = {
     'armel': 'debian-arm',
     'armhf': 'debian-arm',
+    'hurd-i386': 'debian-hurd',
     'kfreebsd-amd64': 'debian-bsd',
     'kfreebsd-i386': 'debian-bsd',
     'mipsel': 'debian-mips',
@@ -45,6 +46,7 @@ usertag_map = {
     'i386': None,
     'kfreebsd-amd64': 'kfreebsd',
     'kfreebsd-i386': 'kfreebsd',
+    'hurd-i386': 'hurd',
 }
 
 default_template = jinja2.Template('''\
