@@ -6,6 +6,7 @@
 # modification, are permitted under any circumstances. No warranty.
 
 import argparse
+import gzip
 import os
 import pwd
 import re
@@ -104,14 +105,24 @@ def main(options):
         sys.stdout = mail_template = tempfile.NamedTemporaryFile(mode='w+', prefix='report-ftbfs', suffix='.mail')
     if options.logname.startswith(('http://', 'https://')):
         url = options.logname + '&raw='
-        log_file = urllib.request.urlopen(url)
+        request = urllib.request.Request(url, headers={'Accept-Encoding': 'gzip'})
+        log_file = urllib.request.urlopen(request)
     else:
         url = None
         log_file = open(options.logname, 'rb')
     try:
-        log = log_file.read().decode('UTF-8', 'replace')
+        log = log_file.read()
     finally:
         log_file.close()
+    try:
+        content_encoding = log_file.getheader('Content-Encoding', 'identity')
+    except AttributeError:
+        content_encoding = 'identity'
+    if content_encoding == 'gzip':
+        log = gzip.decompress(log)
+    else:
+        assert content_encoding == 'identity'
+    log = log.decode('UTF-8', 'replace')
     source = re.search('^dpkg-buildpackage: source package (\S+)$', log, re.MULTILINE).group(1)
     version = re.search('^dpkg-buildpackage: source version (\S+)$', log, re.MULTILINE).group(1)
     architecture = re.search('^dpkg-buildpackage: host architecture (\S+)$', log, re.MULTILINE).group(1)
