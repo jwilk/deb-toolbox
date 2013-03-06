@@ -17,14 +17,16 @@ deb1="$1"
 deb2="$2"
 base1=$(basename "$deb1" .deb)
 base2=$(basename "$deb2" .deb)
-tmpdir=$(mktemp -t -d)
+tmpdir=$(mktemp -t -d deepdebdiff.XXXXXX)
 mkdir -p "$tmpdir/a/$base1/"
 dpkg-deb --raw-extract "$deb1" "$tmpdir/a/$base1/"
 mkdir -p "$tmpdir/b/$base2/"
 dpkg-deb --raw-extract "$deb2" "$tmpdir/b/$base2/"
 cd "$tmpdir"
-diff -urN "a/$base1/" "b/$base2/"
+rc=0
+diff -urN "a/$base1/" "b/$base2/" || rc=$?
 cd /
 rm -rf "$tmpdir"
+exit $rc
 
 # vim:ts=4 sw=4 et
