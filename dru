@@ -1,0 +1,42 @@
+#!/usr/bin/python3
+
+'''
+yet another debian/rules wrapper
+'''
+
+import argparse
+import multiprocessing as mp
+import os
+import sys
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--nocheck', action='store_true')
+    ap.add_argument('--noopt', action='store_true')
+    ap.add_argument('--nostrip', action='store_true')
+    ap.add_argument('--parallel', '-j', metavar='N', type=int, nargs='?', default=False)
+    ap.add_argument('targets', metavar='TARGET', nargs='*', default=['clean', 'binary'], help='targets to run; default: clean binary')
+    options = ap.parse_args()
+    deb_build_options = []
+    if options.nocheck:
+        deb_build_options += ['nocheck']
+    if options.noopt:
+        deb_build_options += ['noopt']
+    if options.nostrip:
+        deb_build_options += ['nostrip']
+    if options.parallel is not False:
+        if options.parallel is None:
+            n = mp.cpu_count()
+        else:
+            n = options.parallel
+        deb_build_options += ['parallel={}'.format(n)]
+    deb_build_options = ' '.join(deb_build_options)
+    os.environ['DEB_BUILD_OPTIONS'] = deb_build_options
+    print('export DEB_BUILD_OPTIONS="{}"'.format(deb_build_options), file=sys.stderr)
+    print('$ debian/rules {}'.format(' '.join(options.targets)))
+    os.execv('debian/rules', ['debian/rules'] + options.targets)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
