@@ -33,8 +33,12 @@ def main():
     deb_build_options = ' '.join(deb_build_options)
     os.environ['DEB_BUILD_OPTIONS'] = deb_build_options
     print('export DEB_BUILD_OPTIONS="{}"'.format(deb_build_options), file=sys.stderr)
-    print('$ debian/rules {}'.format(' '.join(options.targets)))
-    os.execv('debian/rules', ['debian/rules'] + options.targets)
+    commandline = []
+    if any(t.startswith('binary') for t in options.targets):
+        commandline += ['fakeroot']
+    commandline += ['debian/rules'] + options.targets
+    print('$ {}'.format(' '.join(commandline)))
+    os.execvp(commandline[0], commandline)
 
 if __name__ == '__main__':
     main()
