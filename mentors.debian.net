@@ -11,7 +11,6 @@ import contextlib
 import functools
 import re
 import shutil
-import sys
 import tempfile
 
 import apt
@@ -41,7 +40,7 @@ class ArgumentParser(argparse.ArgumentParser):
         p_lookup.add_argument('pkgname', metavar='PKG-NAME[_VERSION]')
         p_checkout = self.add_subparser('checkout')
         p_checkout.add_argument('pkgname', metavar='PKG-NAME[_VERSION]')
-        p_upgrade = self.add_subparser('upgrade')
+        self.add_subparser('upgrade')
 
     def add_subparser(self, name, **kwargs):
         try:
@@ -66,7 +65,6 @@ def get_sources(options, tmpdir=None):
     if tmpdir is None:
         with temporary_directory() as tmpdir:
             return get_sources(options, tmpdir)
-    acquire = apt_pkg.Acquire()
     if options.verbose:
         progress = apt.progress.text.AcquireProgress()
         fetcher = apt_pkg.Acquire(progress)
