@@ -15,7 +15,7 @@ import sys
 
 from debian import deb822
 
-default_mirror = 'http://cdn.debian.net/debian/'
+default_mirror = 'http://http.debian.net/debian/'
 
 def print_urls(mirror, indices, hashfn=None):
     if hashfn is None:
