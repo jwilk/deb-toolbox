@@ -32,7 +32,6 @@ def print_urls(mirror, indices, hashfn=None):
         with file(index_filename) as index:
             for pkg in deb822.Packages.iter_paragraphs(index):
                 directory = mirror + pkg.get('directory', '') + '/'
-                filenames = []
                 try:
                     entries = pkg[field]
                 except KeyError:
