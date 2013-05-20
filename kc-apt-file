@@ -13,7 +13,6 @@ apt-file replacement with Tokyo Cabinet backend
 import argparse
 import collections
 import gzip
-import io
 import os
 import re
 import shutil
@@ -98,7 +97,6 @@ def do_update(options):
                         filename, packages = parse(line).groups()
                         for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
                             data[package] += [filename]
-            contents = None
     finally:
         shutil.rmtree(tmpdir)
     db = kc.DB()
