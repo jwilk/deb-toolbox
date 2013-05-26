@@ -203,6 +203,7 @@ class TestGroup(object):
             env={}
         )
         error = child.stderr.read().decode('ASCII')
+        child.stderr.close()
         if child.wait() != 0:
             error = re.sub('^dpkg-checkbuilddeps: Unmet build dependencies', 'unmet dependencies', error)
             error = error.rstrip()
@@ -288,6 +289,8 @@ class TestGroup(object):
                 tag=tag,
                 line=line.decode(sys.stdout.encoding, 'replace'),
             )]
+        for fp in child.stdout, child.stderr:
+            fp.close()
         rc = child.wait()
         shutil.rmtree(tmpdir1)
         shutil.rmtree(tmpdir2)
