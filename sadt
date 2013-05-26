@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # encoding=UTF-8
 
 # Copyright © 2012, 2013 Jakub Wilk <jwilk@debian.org>
@@ -28,7 +28,9 @@ build the package.
 '''
 
 import argparse
+import gettext
 import os
+import queue as queuemod
 import re
 import shutil
 import stat
@@ -36,7 +38,6 @@ import subprocess as ipc
 import sys
 import tempfile
 import threading
-import Queue as queuemod
 
 import debian.deb822 as deb822
 
@@ -52,17 +53,17 @@ def chmod_x(path):
 def annotate_output(child):
     queue = queuemod.Queue()
     def reader(fd, tag):
-        buf = ''
+        buf = b''
         while True:
-            assert '\n' not in buf
+            assert b'\n' not in buf
             chunk = os.read(fd, 1024)
-            if chunk == '':
+            if chunk == b'':
                 break
-            lines = (buf + chunk).split('\n')
+            lines = (buf + chunk).split(b'\n')
             buf = lines.pop()
             for line in lines:
-                queue.put((tag, line + '\n'))
-        if buf != '':
+                queue.put((tag, line + b'\n'))
+        if buf != b'':
             queue.put((tag, buf))
         queue.put(None)
     queue = queuemod.Queue()
@@ -150,14 +151,14 @@ class DefaultProgress(Progress):
 class VerboseProgress(Progress):
 
     def start(self, name):
-        self._write('%s ... ' % name + (' ' if self._back else ''))
+        self._write('{test} ... '.format(test=name) + (' ' if self._back else ''))
         self.ping()
 
     def skip(self, reason):
-        self._write(self._back + 'SKIP (%s)\n' % reason)
+        self._write(self._back + 'SKIP ({reason})\n'.format(reason=reason))
 
     def fail(self, reason):
-        self._write(self._back + 'FAIL (%s)\n' % reason)
+        self._write(self._back + 'FAIL ({reason})\n'.format(reason=reason))
 
     def ok(self):
         self._write(self._back + 'ok\n')
@@ -201,7 +202,7 @@ class TestGroup(object):
             stderr=ipc.PIPE,
             env={}
         )
-        error = child.stderr.read()
+        error = child.stderr.read().decode('ASCII')
         if child.wait() != 0:
             error = re.sub('^dpkg-checkbuilddeps: Unmet build dependencies', 'unmet dependencies', error)
             error = error.rstrip()
@@ -225,7 +226,7 @@ class TestGroup(object):
             elif r == 'build-needed':
                 raise Skip('source tree not built')
             else:
-                raise Skip('unknown restriction: %s' % r)
+                raise Skip('unknown restriction: {restr}'.format(restr=r))
         if 'rw-build-tree' in restrictions:
             # This will be handled separately
             raise RwBuildTreeNeeded
@@ -234,7 +235,7 @@ class TestGroup(object):
         exc = None
         try:
             self.check_restrictions(ignored_restrictions)
-        except RwBuildTreeNeeded, exc:
+        except RwBuildTreeNeeded as exc:
             # this will be handled separately
             pass
         self.check_depends()
@@ -250,7 +251,7 @@ class TestGroup(object):
             ignored_restrictions.add('build-needed')
         try:
             self.check(ignored_restrictions)
-        except Skip, exc:
+        except Skip as exc:
             progress.skip(str(exc))
             raise
         if rw_build_tree:
@@ -283,7 +284,10 @@ class TestGroup(object):
             progress.ping()
             if tag == 'E':
                 stderr = True
-            output += ['%s: %s' % (tag, line)]
+            output += ['{tag}: {line}'.format(
+                tag=tag,
+                line=line.decode(sys.stdout.encoding, 'replace'),
+            )]
         rc = child.wait()
         shutil.rmtree(tmpdir1)
         shutil.rmtree(tmpdir2)
@@ -295,7 +299,7 @@ class TestGroup(object):
             else:
                 progress.ok()
         else:
-            fail_reason = 'exit code: %d' % rc
+            fail_reason = 'exit code: {rc}'.format(rc=rc)
             progress.fail(fail_reason)
         if rc != 0:
             raise Fail(fail_reason, ''.join(output))
@@ -320,7 +324,7 @@ class TestGroup(object):
 
 def copy_build_tree():
     rw_build_tree = tempfile.mkdtemp(prefix='sadt-rwbt.')
-    print >>sys.stderr, 'Info: copying build tree to %s' % rw_build_tree
+    print('Info: copying build tree to {tree}'.format(tree=rw_build_tree), file=sys.stderr)
     ipc.check_call(['cp', '-a', '.', rw_build_tree])
     return rw_build_tree
 
@@ -336,22 +340,22 @@ def main():
     options.tests = frozenset(options.tests)
     options.ignore_restrictions = frozenset(options.ignore_restrictions.split(','))
     binary_packages = set()
-    with open('debian/control') as file:
+    with open('debian/control', encoding='UTF-8') as file:
         for n, para in enumerate(deb822.Packages.iter_paragraphs(file)):
             if n == 0:
                 para['Source']
             else:
                 binary_packages.add(para['Package'])
     test_groups = []
-    with open('debian/tests/control') as file:
+    with open('debian/tests/control', encoding='UTF-8') as file:
         for para in deb822.Packages.iter_paragraphs(file):
             group = TestGroup()
-            for key, value in para.iteritems():
+            for key, value in para.items():
                 key = key.lower()
                 try:
                     method = getattr(group, 'add_' + key)
                 except AttributeError:
-                    print >>sys.stderr, 'Warning: Unknown field %s, skipping the whole paragraph' % key
+                    print('Warning: Unknown field {field}, skipping the whole paragraph'.format(field=key), file=sys.stderr)
                     group = None
                     break
                 method(value)
@@ -384,7 +388,7 @@ def main():
                     )
                 except Skip:
                     n_skip += 1
-                except Fail, exc:
+                except Fail as exc:
                     failures += [(name, exc)]
                 else:
                     n_ok += 1
@@ -396,24 +400,24 @@ def main():
     separator2 = '=' * 70
     if failures:
         for name, exception in failures:
-            print separator2
-            print 'FAIL: %s' % name
-            print separator1
-            print exception[1]
-    print separator1
-    print 'Ran %d test' % n_test + ('s' if n_test != 1 else '')
-    print
+            print(separator2)
+            print('FAIL: {test}'.format(test=name))
+            print(separator1)
+            print(exception.args[1])
+    print(separator1)
+    print(gettext.ngettext('Ran {n} test', 'Ran {n} tests', n_test).format(n=n_test))
+    print()
     extra_message = []
     if n_skip > 0:
-        extra_message += ['skipped=%d' % n_skip]
+        extra_message += ['skipped={n}'.format(n=n_skip)]
     if n_fail > 0:
-        extra_message += ['failures=%d' % n_fail]
+        extra_message += ['failures={n}'.format(n=n_fail)]
     if extra_message:
-        extra_message = ' (%s)' % ', '.join(extra_message)
+        extra_message = ' ({msg})'.format(msg=', '.join(extra_message))
     else:
         extra_message = ''
     message = ('OK' if n_fail == 0 else 'FAILED') + extra_message
-    print message
+    print(message)
     if rw_build_tree is not None:
         shutil.rmtree(rw_build_tree)
     sys.exit(n_fail > 0)
