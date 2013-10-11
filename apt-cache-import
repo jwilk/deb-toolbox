@@ -1,0 +1,59 @@
+#!/usr/bin/python3
+
+# Copyright © 2013 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import argparse
+import hashlib
+import os
+import subprocess as ipc
+import sys
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
+    ap.add_argument('--hash', choices=('sha1', 'sha256'), default='sha256')
+    ap.add_argument('deb', nargs='+', metavar='DEB')
+    options = ap.parse_args()
+    cmdline = [
+        'apt-get',
+        options.method,
+        '-o', 'Acquire::ForceHash={hash}'.format(hash=options.hash),
+        '-qqy',
+        '--print-uris',
+    ]
+    raw_expected = ipc.check_output(cmdline)
+    raw_expected = raw_expected.splitlines()
+    expected = {}
+    for line in raw_expected:
+        _, name, _, xhash = line.split()
+        name = name.decode('ASCII')
+        xhash = xhash.decode('ASCII').split(':')[-1].lower()
+        expected[name] = xhash
+    hasher = getattr(hashlib, options.hash)
+    for path in options.deb:
+        name = os.path.basename(path)
+        try:
+            xhash = expected[name]
+        except LookupError:
+            print('warning: {path}: not planned for upgrade'.format(path=path), file=sys.stderr)
+            continue
+        m = hasher()
+        with open(path, 'rb') as file:
+            blob = file.read()
+        m.update(blob)
+        ahash = m.hexdigest().lower()
+        if xhash != ahash:
+            print('error: {path}: hash mismatch'.format(path=path), file=sys.stderr)
+            continue
+        path = '/var/cache/apt/archives/{name}'.format(name=name)
+        with open(path, 'xb') as file:
+            file.write(blob)
+        print('ok: {path}'.format(path=path), file=sys.stderr)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
