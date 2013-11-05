@@ -29,7 +29,7 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
             self.key_file,
             self.cert_file,
             cert_reqs=ssl.CERT_REQUIRED,
-            ca_certs='/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt',
+            ca_certs='/usr/share/ca-certificates/mozilla/UTN_USERFirst_Hardware_Root_CA.crt',
         )
         ssl.match_hostname(self.sock.getpeercert(), self.host)
 
