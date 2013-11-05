@@ -7,6 +7,7 @@
 # modification, are permitted under any circumstances. No warranty.
 
 import getpass
+import errno
 import httplib
 import netrc
 import os
@@ -37,7 +38,11 @@ httplib.HTTPS._connection_class = VerifiedHTTPSConnection
 if __name__ == '__main__':
 
     try:
-        netrc_user, _, netrc_password = netrc.netrc().authenticators('wiki.debian.org')
+        try:
+            netrc_user, _, netrc_password = netrc.netrc().authenticators('wiki.debian.org')
+        except IOError as exc:
+            if exc.errno == errno.ENOENT:
+                raise TypeError
     except TypeError:
         print >>sys.stderr, 'No entry for wiki.debian.org found in ~/.netrc'
         sys.exit(1)
