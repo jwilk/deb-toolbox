@@ -11,6 +11,6 @@ then
     exit 1
 fi
 
-dcmd rsync --chmod=0644 -P "$@" ssh.upload.debian.org:/srv/upload.debian.org/UploadQueue/
+exec dcmd rsync --chmod=0644 -P "$@" ssh.upload.debian.org:/srv/upload.debian.org/UploadQueue/
 
 # vim:ts=4 sw=4 et
