@@ -19,7 +19,7 @@ import debian.changelog
 file_extensions = {
     'tar.bz2': 'tar.bz2',
     'tar.gz': 'tar.gz',
-    'tar.lz': 'tar.lzma',
+    'tar.lz': 'tar.lz',
     'tar.xz': 'tar.xz',
     'tbz2': 'tar.bz2',
     'tgz': 'tar.gz',
