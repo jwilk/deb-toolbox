@@ -19,10 +19,10 @@ def main():
         if match is None:
             for key, value in substs.items():
                 line = line.replace(key, value)
+            sys.stdout.buffer.write(line)
         else:
             value, key = match.groups()
             substs[key] = value
-        sys.stdout.buffer.write(line)
 
 if __name__ == '__main__':
     main()
