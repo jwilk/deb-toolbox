@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+
+# Copyright © 2014 Jakub Wilk <jwilk@debian.org>
+
+# Redistribution and use in source and compiled forms, with or without
+# modification, are permitted under any circumstances. No warranty.
+
+import re
+import sys
+
+notice_re = re.compile(
+    "^I: NOTICE: Log filtering will replace '(.+)' with '(«[A-Z]+»)'$".encode('UTF-8')
+)
+
+def main():
+    substs = {}
+    for line in sys.stdin.buffer:
+        match = notice_re.match(line)
+        if match is None:
+            for key, value in substs.items():
+                line = line.replace(key, value)
+        else:
+            value, key = match.groups()
+            substs[key] = value
+        sys.stdout.buffer.write(line)
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
