@@ -10,12 +10,7 @@ use warnings;
 
 use v5.10;
 
-sub escape
-{
-    my ($s) = @_;
-    $s =~ s/([.+])/[$1]/g;
-    return $s;
-}
+use Regexp::Assemble;
 
 my $n = 0;
 my @list = @ARGV;
@@ -24,12 +19,12 @@ if (not @list) {
     my $list = <STDIN>;
     @list = split(' ', $list);
 }
-print(
-    join(
-        '|',
-        map { escape($_) } @list
-    ),
-    "\n"
-);
+my $ra = Regexp::Assemble->new;
+for my $pkg (@list) {
+    $ra->add(quotemeta($pkg));
+}
+my $re = $ra->as_string;
+$re =~ s/[(][?]:/(/g;
+say $re;
 
 # vim:ts=4 sw=4 et
