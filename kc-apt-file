@@ -67,6 +67,9 @@ class Acquire(apt_pkg.Acquire):
             if file.status != file.STAT_DONE:
                 raise AcquireFailed('fetching file failed: {uri}'.format(uri=file.desc_uri))
 
+class ParseError(RuntimeError):
+    pass
+
 def do_update(options):
     parse = re.compile(b'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
@@ -103,7 +106,10 @@ def do_update(options):
                         if line.startswith(b'FILE'):
                             skip = False
                     else:
-                        filename, packages = parse(line).groups()
+                        match = parse(line)
+                        if match is None:
+                            raise ParseError('cannot parse line: {0}'.format(repr(line)[1:]))
+                        filename, packages = match.groups()
                         for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
                             data[package] += [filename]
     finally:
