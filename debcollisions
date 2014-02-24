@@ -26,6 +26,8 @@ if (scalar @ARGV < 1) {
     exit 1;
 }
 
+my $PATH = qr{(?:usr/)?s?bin|usr/games};
+
 my $ra = Regexp::Assemble->new;
 for my $deb (@ARGV) {
     open my $fh, '-|', 'dpkg', '-c', $deb or die;
@@ -33,7 +35,14 @@ for my $deb (@ARGV) {
         m{[.]/(.*)$} or die $_;
         my $path = $1;
         next if $path eq '';
-        $ra->add(quotemeta($path))
+        my $path_re;
+        if ($path =~ m{^$PATH/(.+)}) {
+            my $rest = $1;
+            $path_re = "$PATH/" . quotemeta($rest);
+        } else {
+            $path_re = quotemeta($path);
+        }
+        $ra->add($path_re);
     }
     close $fh;
 }
