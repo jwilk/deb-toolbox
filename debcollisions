@@ -41,6 +41,7 @@ for my $deb (@ARGV) {
                 $files{"$dir/$rest"} = 1;
             }
         } else {
+            $file =~ s{/$}{};
             $files{$file} = 1;
         }
     }
