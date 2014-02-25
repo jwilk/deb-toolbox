@@ -19,35 +19,39 @@ use warnings;
 
 use v5.10;
 
-use Regexp::Assemble;
-
 if (scalar @ARGV < 1) {
     say STDERR "usage: $0 <deb>...";
     exit 1;
 }
 
-my $PATH = qr{(?:usr/)?s?bin|usr/games};
+my @PATH = qw(/bin /usr/bin /sbin /usr/sbin /usr/games);
+my $PATH = join('|', @PATH);
+$PATH = qr($PATH);
 
-my $ra = Regexp::Assemble->new;
+my %files = ();
 for my $deb (@ARGV) {
     open my $fh, '-|', 'dpkg', '-c', $deb or die;
     while (<$fh>) {
-        m{[.]/(.*)$} or die $_;
-        my $path = $1;
-        next if $path eq '';
-        my $path_re;
-        if ($path =~ m{^$PATH/(.+)}) {
+        m{[.](/.*)$} or die $_;
+        my $file = $1;
+        next if $file eq '/';
+        if ($file =~ m{^$PATH/(.+)}) {
             my $rest = $1;
-            $path_re = "$PATH/" . quotemeta($rest);
+            for my $dir (@PATH) {
+                $files{"$dir/$rest"} = 1;
+            }
         } else {
-            $path_re = quotemeta($path);
+            $files{$file} = 1;
         }
-        $ra->add($path_re);
     }
     close $fh;
 }
-my $re = $ra->as_string;
-$re = "^/(?:$re)\$";
-exec { 'apt-file' } ('apt-file', 'search', '-x', $re);
+my @files = sort keys %files;
+
+open my $fh, '|-', 'apt-file', 'search', '-F', '-f', '-' or die;
+for my $file (@files) {
+    say {$fh} $file;
+}
+close $fh or die;
 
 # vim:ts=4 sw=4 et
