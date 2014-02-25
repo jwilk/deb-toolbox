@@ -32,7 +32,7 @@ my %files = ();
 for my $deb (@ARGV) {
     open my $fh, '-|', 'dpkg', '-c', $deb or die;
     while (<$fh>) {
-        m{[.](/.*)$} or die $_;
+        m{[.](/.*)$} or die "$0: cannot parse $_";
         my $file = $1;
         next if $file eq '/';
         if ($file =~ m{^$PATH/(.+)}) {
@@ -45,7 +45,7 @@ for my $deb (@ARGV) {
             $files{$file} = 1;
         }
     }
-    close $fh;
+    close $fh or die;
 }
 my @files = sort keys %files;
 
