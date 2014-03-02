@@ -22,8 +22,7 @@ do
     sudo schroot -c $chroot -- sh -c "
         grep -Fw archive.debian.org /etc/apt/sources.list > /dev/null && exit
         apt-get update &&
-        apt-get dist-upgrade -y &&
-        apt-get autoremove -y &&
+        apt-get dist-upgrade --auto-remove -y &&
         apt-get clean
     "
 done
