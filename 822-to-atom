@@ -17,8 +17,8 @@
 '''
 Convert some 822 hosted on ftp-master to the Atom syndication format.
 
-http://ftp-master.debian.org/new.822
-http://ftp-master.debian.org/deferred/status
+https://ftp-master.debian.org/new.822
+https://ftp-master.debian.org/deferred/status
 '''
 
 import argparse
@@ -87,7 +87,7 @@ class converter(object):
         e_title = elem(feed, 'title')
         e_title.text = self.get_title()
         e_id = elem(feed, 'id')
-        e_id.text = 'http://ftp-master.debian.org/new.atom'
+        e_id.text = 'https://ftp-master.debian.org/new.atom'
         elem(feed, 'link', rel='self', type='application/atom+xml', href=self.get_self_uri())
         for media_type, alternate_uri in self.get_alternate_uris():
             elem(feed, 'link', rel='alternate', type=media_type, href=alternate_uri)
@@ -143,11 +143,11 @@ class convert_new(converter):
         return 'Debian NEW and BYHAND Packages'
 
     def get_self_uri(self):
-        return 'http://ftp-master.debian.org/new.atom'
+        return 'https://ftp-master.debian.org/new.atom'
 
     def get_alternate_uris(self):
-        yield 'text/html', 'http://ftp-master.debian.org/new.html'
-        yield 'text/plain', 'http://ftp-master.debian.org/new.822'
+        yield 'text/html', 'https://ftp-master.debian.org/new.html'
+        yield 'text/plain', 'https://ftp-master.debian.org/new.822'
 
     def _get_entry_epochless_version(self, para):
         version = para['Version'].split()[0]
@@ -158,7 +158,7 @@ class convert_new(converter):
             return version
 
     def get_entry_uri(self, para):
-        return 'http://ftp-master.debian.org/new/{source}_{version}.html'.format(
+        return 'https://ftp-master.debian.org/new/{source}_{version}.html'.format(
             source=para['Source'],
             version=self._get_entry_epochless_version(para)
         )
@@ -169,7 +169,7 @@ class convert_new(converter):
         )
 
     def get_changes_base_uri(self):
-        return 'http://ftp-master.debian.org/new/'
+        return 'https://ftp-master.debian.org/new/'
 
 class convert_deferred(converter):
 
@@ -177,11 +177,11 @@ class convert_deferred(converter):
         return 'Deferred upload to Debian'
 
     def get_self_uri(self):
-        return 'http://ftp-master.debian.org/deferred.atom'
+        return 'https://ftp-master.debian.org/deferred.atom'
 
     def get_alternate_uris(self):
-        yield 'text/html', 'http://ftp-master.debian.org/deferred.html'
-        yield 'text/plain', 'http://ftp-master.debian.org/deferred/status'
+        yield 'text/html', 'https://ftp-master.debian.org/deferred.html'
+        yield 'text/plain', 'https://ftp-master.debian.org/deferred/status'
 
     def get_entry_timestamp(self, para):
         timetuple = email.utils.parsedate_tz(para['Date'])
@@ -196,7 +196,7 @@ class convert_deferred(converter):
         )
 
     def get_changes_base_uri(self):
-        return 'http://ftp-master.debian.org/deferred/'
+        return 'https://ftp-master.debian.org/deferred/'
 
 def main():
     parser = argparse.ArgumentParser()
