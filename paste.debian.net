@@ -52,7 +52,11 @@ def do_create_paste(server, options):
     print(urllib.parse.urljoin(base_url, path))
 
 def main():
-    default_server = 'http://paste.debian.net/server.pl'
+    default_server = 'https://paste.debian.net/server.pl'
+    # XXX Caveat: while the Python XML-RPC client can talk to the paste server
+    # over HTTPS, it does not verify the server's TLS certificate:
+    # http://bugs.python.org/issue13856
+    # It's a shame, but it's still better than talking to the server over HTTP.
     default_username = get_default_username()
     default_expire = 2 * 24 * 60 * 60
     parser = argparse.ArgumentParser()
