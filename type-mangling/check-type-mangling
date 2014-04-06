@@ -16,7 +16,7 @@
 
 set -e
 
-tmpdir=`mktemp -d`
+tmpdir=$(mktemp -d)
 
 cat > "$tmpdir/types" <<EOF
 char
