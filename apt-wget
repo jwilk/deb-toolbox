@@ -15,10 +15,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import argparse
-import hashlib
-import os
 import subprocess as ipc
-import sys
 
 def main():
     ap = argparse.ArgumentParser()
@@ -32,7 +29,6 @@ def main():
     ]
     raw_expected = ipc.check_output(cmdline)
     raw_expected = raw_expected.splitlines()
-    expected = {}
     print('#!/bin/sh')
     for line in raw_expected:
         url, name, _, _ = line.split()
