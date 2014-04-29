@@ -52,15 +52,19 @@ if __name__ == '__main__':
         except IOError as exc:
             if exc.errno == errno.ENOENT:
                 raise TypeError
+        else:
+            use_netrc = True
     except TypeError:
-        print >>sys.stderr, 'No entry for wiki.debian.org found in ~/.netrc'
-        sys.exit(1)
+        use_netrc = False
 
-    def get_user(moinurl, user=netrc_user):
-        return user
-
-    def get_password(user, password=netrc_password):
-        return password
+    if use_netrc:
+        def get_user(moinurl, user=netrc_user):
+            return user
+        def get_password(user, password=netrc_password):
+            return password
+    else:
+        def get_user(moinurl):
+            return raw_input('User: ')
 
     for i, arg in enumerate(sys.argv):
         if i == 0:
@@ -75,7 +79,8 @@ if __name__ == '__main__':
         sys.path[0] = tmpdir
         import editmoin
         editmoin.get_user = get_user
-        getpass.getpass = get_password
+        if use_netrc:
+            getpass.getpass = get_password
         editmoin.main()
     finally:
         shutil.rmtree(tmpdir)
