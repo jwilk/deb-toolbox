@@ -25,7 +25,7 @@ import tempfile
 import apt
 import apt_pkg
 
-mentors_root = 'http://mentors.debian.net/debian'
+mentors_root = 'https://mentors.debian.net/debian'
 
 @functools.total_ordering
 class debversion(str):

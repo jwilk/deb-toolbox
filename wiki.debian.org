@@ -27,6 +27,11 @@ import sys
 import tempfile
 import urllib
 
+try:
+    import readline
+except ImportError:
+    pass
+
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
