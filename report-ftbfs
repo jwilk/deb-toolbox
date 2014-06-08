@@ -126,6 +126,7 @@ def main(options):
     try:
         content_encoding = log_file.getheader('Content-Encoding', 'identity')
     except AttributeError:
+        # on-disk files don't have the concept of Content-Encoding
         content_encoding = 'identity'
     if content_encoding == 'gzip':
         log = gzip.decompress(log)
