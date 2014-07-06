@@ -139,8 +139,6 @@ def do_upgrade(options):
 
 def main():
     apt_pkg.init()
-    for key in [key for key in apt_pkg.config.keys() if key.startswith('Acquire::http::')]:
-        apt_pkg.config[key] = ''
     parser = ArgumentParser()
     options = parser.parse_args()
     return options.action(options)
