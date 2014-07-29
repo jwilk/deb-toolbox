@@ -30,7 +30,7 @@ def get_porterboxes():
         box = box[1]
         [status] = box.get('status', [''])
         [access] = box.get('access', [''])
-        if status.startswith('down') or access.startswith('lockdown') or access.startswith('restrict'):
+        if status.startswith('down') or access.startswith('lockdown'):
             continue
         [architecture] = box['architecture']
         [hostname] = box['hostname']
