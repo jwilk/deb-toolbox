@@ -48,7 +48,7 @@ def download_file(changes_item):
 def download_changes(source, version=None):
     prefix_length = 1 if not source.startswith('lib') else 4
     prefix = source[:prefix_length]
-    news_url = 'http://packages.qa.debian.org/%(prefix)s/%(source)s/news.rss20.xml' % locals()
+    news_url = 'https://packages.qa.debian.org/%(prefix)s/%(source)s/news.rss20.xml' % locals()
     news = wget(news_url)
     news = etree.parse(news)
     for item in news.getiterator('item'):
