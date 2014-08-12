@@ -38,7 +38,7 @@ try:
             arg = new_arg
         sbuild_args += [arg]
     os.chdir(tmpdir)
-    for filename in glob.glob('*'):
+    for filename in glob.iglob('*'):
         os.chmod(filename, 0o644)
     ipc.check_call(['ls', '-lR'])
     try:
