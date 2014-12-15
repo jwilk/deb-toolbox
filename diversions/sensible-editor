@@ -1,0 +1,2 @@
+#!/bin/sh
+exec ${VISUAL:-${EDITOR:-/usr/bin/editor}} "$@"
