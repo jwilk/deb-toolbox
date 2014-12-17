@@ -1,2 +1,2 @@
 #!/bin/bash
-exec perl <(sed -e "s,||= 'medium',||= 'low'," /usr/bin/debchange.distrib)
+exec perl <(sed -e "s,||= 'medium',||= 'low'," /usr/bin/debchange.distrib) "$@"
