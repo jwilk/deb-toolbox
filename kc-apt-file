@@ -175,7 +175,7 @@ class default_architecture(object):
         return self._cache
 
 class default:
-    mirror = 'http://http.debian.net/debian'
+    mirror = 'http://httpredir.debian.org/debian'
     distribution = 'unstable'
     architecture = default_architecture()
     sections = ['main', 'contrib', 'non-free']

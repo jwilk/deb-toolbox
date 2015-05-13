@@ -24,7 +24,7 @@ import sys
 
 from debian import deb822
 
-default_mirror = 'http://http.debian.net/debian/'
+default_mirror = 'http://httpredir.debian.org/debian/'
 
 def print_urls(mirror, indices, hashfn=None):
     if hashfn is None:
