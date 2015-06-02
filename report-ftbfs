@@ -40,6 +40,7 @@ def get_email():
     )
 
 mailinglist_map = {
+    'arm64': 'debian-arm',
     'armel': 'debian-arm',
     'armhf': 'debian-arm',
     'hurd-i386': 'debian-hurd',
