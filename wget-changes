@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding=UTF-8
 
-# Copyright © 2010, 2014 Jakub Wilk <jwilk@debian.org>
+# Copyright © 2010-2015 Jakub Wilk <jwilk@debian.org>
 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,11 +16,11 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import argparse
+import cStringIO as stringio
 import contextlib
 import re
-import urllib2
-import cStringIO as stringio
 import sys
+import urllib2
 from xml.etree import cElementTree as etree
 
 from debian import deb822
