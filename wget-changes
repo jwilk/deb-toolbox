@@ -21,7 +21,7 @@ import io
 import re
 import sys
 import urllib2
-from xml.etree import cElementTree as etree
+import xml.etree.cElementTree as etree
 
 from debian import deb822
 
