@@ -16,8 +16,8 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import argparse
-import cStringIO as stringio
 import contextlib
+import io
 import re
 import sys
 import urllib2
@@ -67,7 +67,7 @@ def download_changes(source, version=None):
     changes = etree.fromstring('<root>%s</root>' % changes).text.encode('UTF-8')
     with file('%(source)s_%(version)s_snapshot.changes' % locals(), 'w') as out_file:
         out_file.write(changes)
-    changes = stringio.StringIO(changes)
+    changes = io.BytesIO(changes)
     changes = deb822.Changes.gpg_stripped_paragraph(changes)
     [changes] = deb822.Changes.iter_paragraphs(changes)
     for item in changes['Checksums-Sha1']:
