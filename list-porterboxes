@@ -44,12 +44,17 @@ def get_porterboxes():
 def main():
     oparser = argparse.ArgumentParser()
     oparser.add_argument('-u', '--unique', action='store_true')
+    oparser.add_argument('--dns', action='store_true')
     oparser.add_argument('architecture', metavar='<architecture>', nargs='?')
     options = oparser.parse_args()
+    if options.dns:
+        options.unique = True
     porterboxes = get_porterboxes()
     template = '{host}'
     if options.architecture is None:
         template = '{arch}\t' + template
+    if options.dns:
+        template = '{arch}-porterbox in cname {host}.'
     for architecture, hostnames in sorted(porterboxes.iteritems()):
         if options.unique:
             debian_org_hostnames = [h for h in hostnames if h.endswith('.debian.org')]
