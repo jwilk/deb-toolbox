@@ -52,6 +52,9 @@ def main():
         template = '%(architecture)s\t' + template
     for architecture, hostnames in sorted(porterboxes.iteritems()):
         if options.unique:
+            debian_org_hostnames = [h for h in hostnames if h.endswith('.debian.org')]
+            if debian_org_hostnames:
+                hostnames = debian_org_hostnames
             hostnames = [hostnames[0]]
         if options.architecture is not None and architecture != options.architecture:
             continue
