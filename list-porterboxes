@@ -15,6 +15,8 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+from __future__ import print_function
+
 import argparse
 import collections
 import ldap
@@ -54,7 +56,7 @@ def main():
         if options.architecture is not None and architecture != options.architecture:
             continue
         for hostname in hostnames:
-            print template % locals()
+            print(template % locals())
 
 if __name__ == '__main__':
     main()
