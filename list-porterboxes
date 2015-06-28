@@ -47,9 +47,9 @@ def main():
     oparser.add_argument('architecture', metavar='<architecture>', nargs='?')
     options = oparser.parse_args()
     porterboxes = get_porterboxes()
-    template = '%(hostname)s'
+    template = '{host}'
     if options.architecture is None:
-        template = '%(architecture)s\t' + template
+        template = '{arch}\t' + template
     for architecture, hostnames in sorted(porterboxes.iteritems()):
         if options.unique:
             debian_org_hostnames = [h for h in hostnames if h.endswith('.debian.org')]
@@ -59,7 +59,7 @@ def main():
         if options.architecture is not None and architecture != options.architecture:
             continue
         for hostname in hostnames:
-            print(template % locals())
+            print(template.format(host=hostname, arch=architecture))
 
 if __name__ == '__main__':
     main()
