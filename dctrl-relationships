@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # encoding=UTF-8
 
-# Copyright © 2011, 2014 Jakub Wilk <jwilk@debian.org>
+# Copyright © 2011-2015 Jakub Wilk <jwilk@debian.org>
 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -44,11 +44,11 @@ def parse(file, options):
                         subrelation['version'] = None
                 if options.alternatives is alt_all:
                     value = deb822.PkgRelation.str([relation])
-                    print '{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=value)
+                    print('{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=value))
                 else:
                     for subrelation in relation:
                         subvalue = deb822.PkgRelation.str([[subrelation]])
-                        print '{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=subvalue)
+                        print('{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=subvalue))
                         if options.alternatives is alt_first:
                             break
 
