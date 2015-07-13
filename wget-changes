@@ -34,7 +34,7 @@ def wget(url):
     return urllib.request.urlopen(url)
 
 def download_file(changes_item):
-    url = 'http://snapshot.debian.org/file/%s' % changes_item['sha1']
+    url = 'http://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
     with contextlib.closing(wget(url)) as in_file:
         with open(changes_item['name'], 'wb') as out_file:
             while 1:
@@ -46,7 +46,7 @@ def download_file(changes_item):
 def download_changes(source, version=None):
     prefix_length = 1 if not source.startswith('lib') else 4
     prefix = source[:prefix_length]
-    news_url = 'https://packages.qa.debian.org/%(prefix)s/%(source)s/news.rss20.xml' % locals()
+    news_url = 'https://packages.qa.debian.org/{s}/{src}/news.rss20.xml'.format(s=prefix, src=source)
     news = wget(news_url)
     news = etree.parse(news)
     for item in news.getiterator('item'):
@@ -63,8 +63,8 @@ def download_changes(source, version=None):
     changes_url = etree.fromstring(link.encode('ASCII', 'replace')).get('href')
     changes = wget(changes_url).read().decode('UTF-8')
     changes = _pgpsig(changes).group(1)
-    changes = etree.fromstring('<root>%s</root>' % changes).text
-    with open('%(source)s_%(version)s_snapshot.changes' % locals(), 'wt', encoding='UTF-8') as out_file:
+    changes = etree.fromstring('<root>{0}</root>'.format(changes)).text
+    with open('{src}_{ver}_snapshot.changes'.format(src=source, ver=version), 'wt', encoding='UTF-8') as out_file:
         out_file.write(changes)
     changes = io.StringIO(changes)
     changes = deb822.Changes.gpg_stripped_paragraph(changes)
