@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# encoding=UTF-8
+#!/usr/bin/python3
 
 # Copyright © 2010-2015 Jakub Wilk <jwilk@debian.org>
 
@@ -15,30 +14,32 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
-
 import argparse
 import collections
-import ldap
+import ldap3
 
 exceptions = set()
 
 def get_porterboxes():
-
     results = collections.defaultdict(list)
-    db = ldap.initialize('ldap://db.debian.org')
-    boxes = db.search_s('dc=debian,dc=org', ldap.SCOPE_SUBTREE, '(&(objectClass=debianServer)(purpose=porterbox))')
-    for box in boxes:
-        box = box[1]
-        [status] = box.get('status', [''])
-        [access] = box.get('access', [''])
-        if status.startswith('down') or access.startswith('lockdown'):
-            continue
-        [architecture] = box['architecture']
-        [hostname] = box['hostname']
-        if hostname in exceptions:
-            continue
-        results[architecture].append(hostname)
+    with ldap3.Connection('db.debian.org') as lc:
+        lc.search(
+            'dc=debian,dc=org',
+            '(&(objectClass=debianServer)(purpose=porterbox))',
+            ldap3.SUBTREE,
+            attributes=['access', 'status', 'architecture', 'hostname']
+        )
+        for box in lc.response:
+            box = box['attributes']
+            [status] = box.get('status', [''])
+            [access] = box.get('access', [''])
+            if status.startswith('down') or access.startswith('lockdown'):
+                continue
+            [architecture] = box['architecture']
+            [hostname] = box['hostname']
+            if hostname in exceptions:
+                continue
+            results[architecture] += [hostname]
     return results
 
 def main():
@@ -55,7 +56,7 @@ def main():
         template = '{arch}\t' + template
     if options.dns:
         template = '{arch}-porterbox in cname {host}.'
-    for architecture, hostnames in sorted(porterboxes.iteritems()):
+    for architecture, hostnames in sorted(porterboxes.items()):
         if options.unique:
             debian_org_hostnames = [h for h in hostnames if h.endswith('.debian.org')]
             if debian_org_hostnames:
