@@ -42,7 +42,7 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
             self.key_file,
             self.cert_file,
             cert_reqs=ssl.CERT_REQUIRED,
-            ca_certs='/usr/share/ca-certificates/mozilla/UTN_USERFirst_Hardware_Root_CA.crt',
+            ca_certs='/usr/share/ca-certificates/mozilla/USERTrust_RSA_Certification_Authority.crt',
         )
         ssl.match_hostname(self.sock.getpeercert(), self.host)
 
