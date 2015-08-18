@@ -40,6 +40,9 @@ def get_porterboxes():
             if hostname in exceptions:
                 continue
             results[architecture] += [hostname]
+    if 'i386' not in results:
+        # amd64 porterbox provides i386 chroots
+        results['i386'] = results['amd64']
     return results
 
 def main():
