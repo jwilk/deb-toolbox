@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+
+# Copyright © 2015 Jakub Wilk <jwilk@debian.org>
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+
+use English qw(-no_match_vars);
+
+use LWP::UserAgent qw();
+use HTML::LinkExtor qw();
+use Graph::Easy::Parser::Graphviz;
+
+binmode STDOUT, ':encoding(UTF-8)';
+# FIXME: don't hardcode UTF-8, but honour locale charset
+
+my $ua = LWP::UserAgent->new;
+$ua->env_proxy;
+
+sub http_get
+{
+    my ($url) = @_;
+    my $response = $ua->get($url);
+    if (not $response->is_success) {
+        die $response->status_line;
+    }
+    return ($response->base, $response->decoded_content);
+}
+
+my $base = "https://bugs.debian.org";
+
+sub get_version_url
+{
+    my ($url, $html) = @_;
+    my $version_url = undef;
+    my $cb = sub {
+        my ($tag, %links) = @_;
+        $tag eq 'a' or return;
+        while (my ($attr, $link) = each %links) {
+            $attr eq 'href' or continue;
+            my $url = "$link";
+            if ($url =~ m{\A\Q$base\E/cgi-bin/version[.]cgi[?]}) {
+                $version_url = $url;
+                return;
+            }
+        }
+    };
+    my $html_parser = HTML::LinkExtor->new($cb, $url);
+    $html_parser->parse($html);
+    if (not defined $version_url) {
+        die "couldn't extract version graph from $url"
+    }
+    return $version_url;
+}
+
+my $bugno = $ARGV[0];
+# TODO: proper argument parsing
+
+my $bug_url = "$base/cgi-bin/bugreport.cgi?bug=$bugno";
+($bug_url, my $html) = http_get($bug_url);
+my $version_url = get_version_url($bug_url, $html);
+($version_url, my $version_dot) = http_get("$version_url;dot=1");
+my $graphviz_parser = Graph::Easy::Parser::Graphviz->new();
+my %vgood = ();
+my %vbad = ();
+while ($version_dot =~ /^"([^"]++)" \[fillcolor="(?:(chartreuse)|(salmon))"/mg) {
+    my ($pkgver, $good, $bad) = ($1, $2, $3);
+    if ($good) {
+        $vgood{$pkgver} = 1
+    }
+    if ($bad) {
+        $vbad{$pkgver} = 1
+    }
+}
+my $vgood_re = join('|', map { "\Q$_" } keys %vgood);
+my $vbad_re = join('|', map { "\Q$_" } keys %vbad);
+my $vgraph = $graphviz_parser->from_text($version_dot);
+my $vboxart = $vgraph->as_boxart();
+$vboxart =~ s/(\s+(?:$vgood_re)\s+)/\e[31m$1\e[0m/g;
+$vboxart =~ s/(\s+(?:$vbad_re)\s+)/\e[32m$1\e[0m/g;
+print $vboxart;
+
+# vim:ts=4 sts=4 sw=4 et
