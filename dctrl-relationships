@@ -22,6 +22,7 @@ import debian.deb822 as deb822
 fields = [
     'Depends', 'Recommends', 'Suggests', 'Enhances',
     'Conflicts', 'Breaks', 'Replaces',
+    'Provides',
 ]
 
 alt_all = object()
