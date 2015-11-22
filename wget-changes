@@ -37,7 +37,7 @@ def download_file(changes_item):
     url = 'http://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
     with contextlib.closing(wget(url)) as in_file:
         with open(changes_item['name'], 'wb') as out_file:
-            while 1:
+            while True:
                 block = in_file.read(block_size)
                 if not block:
                     break
