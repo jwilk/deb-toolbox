@@ -33,7 +33,7 @@ try:
     ipc.check_call(['setfacl', '-m', 'u:sbuild:rwx', '--', tmpdir])
     for arg in sys.argv[1:]:
         if arg.endswith('.dsc'):
-            new_arg = os.path.join(tmpdir, os.path.basename(arg))
+            new_arg = os.path.basename(arg)
             ipc.check_call(['dcmd', 'cp', '-v', '--', arg, tmpdir])
             arg = new_arg
         sbuild_args += [arg]
