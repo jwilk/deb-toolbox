@@ -126,7 +126,7 @@ class converter(object):
                 sponsor_email = fix_email(sponsor_email)
                 e_sponsor = elem(entry, 'contributor')
                 e_sponsor_name = elem(e_sponsor, 'name')
-                e_sponsor_name.text = sponsor_email # FIXME!
+                e_sponsor_name.text = sponsor_email  # FIXME!
                 e_sponsor_email = elem(e_sponsor, 'email')
                 e_sponsor_email.text = sponsor_email
             e_content = elem(entry, 'content', type='xhtml')
