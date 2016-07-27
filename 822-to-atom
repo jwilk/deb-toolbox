@@ -186,7 +186,7 @@ class convert_deferred(converter):
     def get_entry_timestamp(self, para):
         timetuple = email.utils.parsedate_tz(para['Date'])
         timestamp = datetime.datetime(*timetuple[:7])
-        timestamp -= datetime.timedelta(seconds = timetuple[9])
+        timestamp -= datetime.timedelta(seconds=timetuple[9])
         return timestamp
 
     def get_entry_uri(self, para):
