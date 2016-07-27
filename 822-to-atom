@@ -93,7 +93,7 @@ class converter(object):
             elem(feed, 'link', rel='alternate', type=media_type, href=alternate_uri)
         e_updated = elem(feed, 'updated')
         e_updated.text = rfc3339(datetime.datetime.utcnow())
-        e_updated.tail += '\n';
+        e_updated.tail += '\n'
         for para in read_tag_file(sys.stdin):
             uri = self.get_entry_uri(para)
             entry = elem(feed, 'entry')
