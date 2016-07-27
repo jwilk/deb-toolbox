@@ -134,9 +134,9 @@ def main(options):
     else:
         assert content_encoding == 'identity'
     log = log.decode('UTF-8', 'replace')
-    source = re.search('^dpkg-buildpackage: source package (\S+)$', log, re.MULTILINE).group(1)
-    version = re.search('^dpkg-buildpackage: source version (\S+)$', log, re.MULTILINE).group(1)
-    architecture = re.search('^dpkg-buildpackage: host architecture (\S+)$', log, re.MULTILINE).group(1)
+    source = re.search('^dpkg-buildpackage:(?: info:)? source package (\S+)$', log, re.MULTILINE).group(1)
+    version = re.search('^dpkg-buildpackage:(?: info:)? source version (\S+)$', log, re.MULTILINE).group(1)
+    architecture = re.search('^dpkg-buildpackage:(?: info:)? host architecture (\S+)$', log, re.MULTILINE).group(1)
     if options.arch_specific:
         usertag = usertag_map.get(architecture, architecture)
         mailinglist = mailinglist_map.get(architecture, 'debian-' + architecture)
