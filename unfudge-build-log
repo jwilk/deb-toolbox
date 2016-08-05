@@ -18,7 +18,7 @@ import re
 import sys
 
 notice_re = re.compile(
-    "^I: NOTICE: Log filtering will replace '(.+)' with '(«[A-Z]+»)'$".encode('UTF-8')
+    "^I: NOTICE: Log filtering will replace '(.+)' with '((?:«|<<)[A-Z]+(?:»|>>))'$".encode('UTF-8')
 )
 
 def main():
