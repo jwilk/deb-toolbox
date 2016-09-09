@@ -31,7 +31,7 @@ _pgpsig = re.compile('>(-----BEGIN PGP SIGNED MESSAGE-----\n.*\n-----END PGP SIG
 
 def wget(url):
     print('+', url, file=sys.stderr)
-    return urllib.request.urlopen(url)
+    return urllib.request.urlopen(url, cadefault=True)
 
 def download_file(changes_item):
     url = 'http://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
