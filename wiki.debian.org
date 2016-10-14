@@ -31,6 +31,8 @@ try:
     import readline
 except ImportError:
     pass
+else:
+    del readline
 
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
     def connect(self):
