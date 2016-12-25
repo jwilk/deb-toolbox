@@ -70,7 +70,7 @@ class ParseError(RuntimeError):
     pass
 
 def do_update(options):
-    parse = re.compile(b'^(.*\S)\s+(\S+)$').match
+    parse = re.compile(br'^(.*\S)\s+(\S+)$').match
     data = collections.defaultdict(list)
     if options.quiet:
         fetcher = Acquire()
