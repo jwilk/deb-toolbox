@@ -19,6 +19,7 @@ import collections
 import os
 import re
 import subprocess as ipc
+import sys
 
 is_build_id = re.compile('^[0-9a-fA-F]{40,}$').match
 parse_readelf_n = re.compile(br'^\s+Build ID: ([0-9a-f]{40,})$').match
@@ -65,6 +66,8 @@ def get_maps():
     return source_map, binary_map
 
 def main():
+    if sys.version_info < (3, 3):
+        raise RuntimeError('Python >= 3.3 is required')
     ap = argparse.ArgumentParser()
     ap.add_argument('idents', metavar='BUILD-ID-OR-FILE', nargs='+')
     options = ap.parse_args()
