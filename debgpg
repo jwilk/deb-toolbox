@@ -1,0 +1,2 @@
+#!/bin/sh
+exec gpg --keyring /usr/share/keyrings/debian-keyring.gpg "$@"
