@@ -98,11 +98,10 @@ def get_sources(options, tmpdir=None):
             raise RuntimeError('Fetching sources failed')
     result = collections.defaultdict(dict)
     for file in files.values():
-        with open(file.destfile) as file:
-            for para in apt_pkg.TagFile(file):
-                pkgname = para['Package']
-                version = debversion(para['Version'])
-                result[pkgname][version] = para
+        for para in apt_pkg.TagFile(file.destfile):
+            pkgname = para['Package']
+            version = debversion(para['Version'])
+            result[pkgname][version] = para
     return result
 
 def do_lookup(options):
