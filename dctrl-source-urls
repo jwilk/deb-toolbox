@@ -23,9 +23,11 @@ import sys
 
 from debian import deb822
 
-default_mirror = 'http://httpredir.debian.org/debian/'
+default_mirror = 'http://httpredir.debian.org/debian'
 
 def print_urls(mirror, indices, hashfn=None):
+    if not mirror.endswith('/'):
+        mirror += '/'
     if hashfn is None:
         output_format = '{directory}{filename}'
     else:
