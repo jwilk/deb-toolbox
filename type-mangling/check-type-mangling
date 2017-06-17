@@ -59,11 +59,11 @@ EOF
 #include <stdint.h>
 #include <sys/types.h>
 EOF
-  nl -n rz "$tmpdir/types" | sed -r -e 's/ *([0-9]+)\t(.*)/void f__\1__(\2) { return; }/'
+  nl -n rz "$tmpdir/types" | sed -E -e 's/ *([0-9]+)\t(.*)/void f__\1__(\2) { return; }/'
 ) | g++ -W -Wall -c -x c++ - -o "$tmpdir/tmp.o"
 nm "$tmpdir/tmp.o" \
 | grep ' T ' \
 | sort \
-| sed -r -e 's/.*f__([0-9]+)__//' \
+| sed -E -e 's/.*f__([0-9]+)__//' \
 | paste "$tmpdir/types" -
 rm -rf "$tmpdir"
