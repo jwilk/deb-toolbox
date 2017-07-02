@@ -1,0 +1,2 @@
+#!/bin/sh
+exec unshare -n /usr/bin/apt-listchanges.distrib "$@"
