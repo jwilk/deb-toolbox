@@ -30,11 +30,17 @@ def main():
     raw_expected = ipc.check_output(cmdline)
     raw_expected = raw_expected.splitlines()
     print('#!/bin/sh')
+    simple_urls = []
     for line in raw_expected:
         url, name, _, _ = line.split()
         name = name.decode('ASCII')
         url = url.decode('ASCII')
-        print('wget', url, '-O', name)
+        if url.endswith("/{name}'".format(name=name)):
+            simple_urls += [url]
+        else:
+            print('wget', url, '-O', name)
+    if simple_urls:
+        print('wget', *simple_urls)
 
 if __name__ == '__main__':
     main()
