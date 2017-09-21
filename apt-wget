@@ -19,14 +19,15 @@ import subprocess as ipc
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
+    ap.add_argument('cmd', metavar='APT-CMD', default='dist-upgrade', nargs='?')
+    ap.add_argument('args', metavar='APT-ARGS', nargs=argparse.REMAINDER)
     options = ap.parse_args()
     cmdline = [
         'apt-get',
-        options.method,
+        options.cmd,
         '-qqy',
         '--print-uris',
-    ]
+    ] + options.args
     raw_expected = ipc.check_output(cmdline)
     raw_expected = raw_expected.splitlines()
     print('#!/bin/sh')
