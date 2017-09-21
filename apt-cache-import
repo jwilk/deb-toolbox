@@ -25,6 +25,7 @@ def main():
     ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
     ap.add_argument('deb', nargs='+', metavar='DEB')
     options = ap.parse_args()
+    os.umask(0o022)
     cmdline = [
         'apt-get',
         options.method,
