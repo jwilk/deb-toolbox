@@ -20,11 +20,15 @@ import os
 import subprocess as ipc
 import sys
 
+cache_dir = '/var/cache/apt/archives'
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
     ap.add_argument('deb', nargs='+', metavar='DEB')
     options = ap.parse_args()
+    if not os.access(cache_dir, os.W_OK):
+        ap.error('{dir} is not writable'.format(dir=cache_dir))
     os.umask(0o022)
     cmdline = [
         'apt-get',
@@ -56,7 +60,7 @@ def main():
         if xhash != ahash:
             print('error: {path}: hash mismatch'.format(path=path), file=sys.stderr)
             continue
-        path = '/var/cache/apt/archives/{name}'.format(name=name)
+        path = '{dir}/{name}'.format(dir=cache_dir, name=name)
         with open(path, 'xb') as file:
             file.write(blob)
         print('ok: {path}'.format(path=path), file=sys.stderr)
