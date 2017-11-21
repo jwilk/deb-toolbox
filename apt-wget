@@ -22,7 +22,7 @@ def main():
     print('#!/bin/sh')
     simple_urls = []
     for line in raw_expected:
-        url, name, _, _ = line.split()
+        url, name, *_ = line.split()
         name = name.decode('ASCII')
         url = url.decode('ASCII')
         if url.endswith("/{name}'".format(name=name)):
