@@ -13,6 +13,7 @@ cache_dir = '/var/cache/apt/archives'
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--move', action='store_true')
     ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
     ap.add_argument('deb', nargs='+', metavar='DEB')
     options = ap.parse_args()
@@ -49,9 +50,12 @@ def main():
         if xhash != ahash:
             print('error: {path}: hash mismatch'.format(path=path), file=sys.stderr)
             continue
+        src_path = path
         path = '{dir}/{name}'.format(dir=cache_dir, name=name)
         with open(path, 'xb') as file:
             file.write(blob)
+        if options.move:
+            os.remove(src_path)
         print('ok: {path}'.format(path=path), file=sys.stderr)
 
 if __name__ == '__main__':
