@@ -20,11 +20,13 @@ def get_porterboxes():
         )
         for box in lc.response:
             box = box['attributes']
-            [status] = box.get('status', [''])
-            [access] = box.get('access', [''])
+            [status] = box.get('status') or ['']
+            [access] = box.get('access') or ['']
             if status.startswith('down') or access.startswith('lockdown'):
                 continue
-            [architecture] = box['architecture']
+            architecture = box['architecture']
+            if isinstance(architecture, list):
+                [architecture] = architecture
             [hostname] = box['hostname']
             if hostname in exceptions:
                 continue
