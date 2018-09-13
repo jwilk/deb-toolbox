@@ -23,7 +23,7 @@ def wget(url):
     return urllib.request.urlopen(url, cadefault=True)
 
 def download_file(changes_item):
-    url = 'http://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
+    url = 'https://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
     with contextlib.closing(wget(url)) as in_file:
         with open(changes_item['name'], 'wb') as out_file:
             while True:
