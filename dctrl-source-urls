@@ -12,7 +12,7 @@ import sys
 
 from debian import deb822
 
-default_mirror = 'http://deb.debian.org/debian'
+default_mirror = 'https://deb.debian.org/debian'
 
 def print_urls(mirror, indices, hashfn=None):
     if not mirror.endswith('/'):
