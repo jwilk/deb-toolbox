@@ -6,6 +6,7 @@
 import argparse
 import hashlib
 import os
+import shlex
 import subprocess as ipc
 import sys
 
@@ -14,7 +15,7 @@ cache_dir = '/var/cache/apt/archives'
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--move', action='store_true')
-    ap.add_argument('--method', choices=('upgrade', 'dist-upgrade'), default='dist-upgrade')
+    ap.add_argument('--method', default='dist-upgrade')
     ap.add_argument('deb', nargs='+', metavar='DEB')
     options = ap.parse_args()
     if not os.access(cache_dir, os.W_OK):
@@ -22,10 +23,11 @@ def main():
     os.umask(0o022)
     cmdline = [
         'apt-get',
-        options.method,
         '-o', 'Acquire::ForceHash=sha256',
         '-qqy',
         '--print-uris',
+        '--',
+        *shlex.split(options.method)
     ]
     raw_expected = ipc.check_output(cmdline)
     raw_expected = raw_expected.splitlines()
