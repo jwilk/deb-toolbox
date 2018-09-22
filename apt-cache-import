@@ -44,7 +44,7 @@ def main():
         try:
             xhash = expected[name]
         except LookupError:
-            print('warning: {path}: not planned for upgrade'.format(path=path), file=sys.stderr)
+            print('warning: {path}: not planned for install'.format(path=path), file=sys.stderr)
             continue
         m = hashlib.sha256()
         with open(path, 'rb') as file:
