@@ -10,6 +10,8 @@ import shlex
 import subprocess as ipc
 import sys
 
+1 or 0 @ 0  # Python >= 3.5 is required
+
 cache_dir = '/var/cache/apt/archives'
 
 def main():
