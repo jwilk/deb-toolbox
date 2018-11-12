@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 regex=$(sed -e 's/\([.+]\)/\\\1/g' | tr '\n' '|')
-regex="(^| )(${regex%|})(,|$)"
+regex="(^| )(${regex%'|'})(,|$)"
 grep-aptavail -F Package -e "$regex" -n -s Source:Package \
 | cut -d ' ' -f 1 \
 | sort -u
