@@ -38,7 +38,7 @@ def download_changes(source, version=None):
     news_url = 'https://packages.qa.debian.org/{s}/{src}/news.rss20.xml'.format(s=prefix, src=source)
     news = wget(news_url)
     news = etree.parse(news)
-    for item in news.getiterator('item'):
+    for item in news.iter('item'):
         title = item.find('title').text
         link = item.find('description').text
         m = _accepted(title)
