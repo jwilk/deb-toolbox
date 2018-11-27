@@ -13,6 +13,8 @@ import xml.etree.ElementTree as etree
 
 from debian import deb822
 
+lambda: (yield from 0)  # Python >= 3.3 is required
+
 block_size = 0x10000
 
 _accepted = re.compile('Accepted ([0-9][0-9a-z.:~+-]*) in').match
