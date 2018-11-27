@@ -105,7 +105,10 @@ def main(options):
     if options.logname.startswith(('http://', 'https://')):
         url = options.logname + '&raw=1'
         request = urllib.request.Request(url, headers={'Accept-Encoding': 'gzip'})
-        log_file = urllib.request.urlopen(request, cadefault=True)
+        ca_options = {}
+        if sys.version_info < (3, 4, 3):
+            ca_options.update(cadefault=True)
+        log_file = urllib.request.urlopen(request, **ca_options)
     else:
         url = None
         log_file = open(options.logname, 'rb')
