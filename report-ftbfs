@@ -16,6 +16,8 @@ import urllib.request
 
 import jinja2
 
+lambda: (yield from 0)  # Python >= 3.3 is required
+
 def get_full_name():
     return (
         os.getenv('DEBFULLNAME') or
