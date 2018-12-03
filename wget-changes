@@ -5,6 +5,7 @@
 
 import argparse
 import contextlib
+import html
 import io
 import re
 import sys
@@ -57,7 +58,7 @@ def download_changes(source, version=None):
     changes_url = etree.fromstring(link.encode('ASCII', 'replace')).get('href')
     changes = wget(changes_url).read().decode('UTF-8')
     changes = _pgpsig(changes).group(1)
-    changes = etree.fromstring('<root>{0}</root>'.format(changes)).text
+    changes = html.unescape(changes)
     with open('{src}_{ver}_snapshot.changes'.format(src=source, ver=version), 'wt', encoding='UTF-8') as out_file:
         out_file.write(changes)
     changes = io.StringIO(changes)
