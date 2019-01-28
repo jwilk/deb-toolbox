@@ -10,7 +10,7 @@ A wrapper over sbuild that allow it to be run with another user (named
 
 import glob
 import os
-import pipes
+import shlex
 import shutil
 import subprocess as ipc
 import sys
@@ -37,7 +37,7 @@ try:
     finally:
         ipc.check_call(['cp', '-v', '-L', '-f', '-t', cwd, '--'] + glob.glob('*'))
 except ipc.CalledProcessError as ex:
-    print('E:', ' '.join(map(pipes.quote, ex.cmd)))
+    print('E:', ' '.join(map(shlex.quote, ex.cmd)))
     sys.exit(1)
 finally:
     shutil.rmtree(tmpdir)
