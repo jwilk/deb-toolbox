@@ -18,7 +18,7 @@ parse_readelf_n = re.compile(br'^\s+Build ID: ([0-9a-f]{40,})$').match
 def ident_to_path(ident):
     if is_build_id(ident):
         ident = ident.lower()
-        return '/usr/lib/debug/{0}/{1}'.format(ident[:2], ident[2:])
+        return '/usr/lib/debug/.build-id/{0}/{1}.debug'.format(ident[:2], ident[2:])
     else:
         return os.path.realpath(ident)
 
