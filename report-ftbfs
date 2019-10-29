@@ -172,7 +172,7 @@ def main(options):
     sys.stdout = sys.__stdout__
     if options.mutt:
         mail_template.flush()
-        ipc.check_call(['mutt', '-H', mail_template.name])
+        ipc.check_call([options.mutt, '-H', mail_template.name])
 
 def validate_python_version(v):
     if re.match('^[23][.][0-9]+$', v):
@@ -183,7 +183,8 @@ validate_python_version.__name__ = 'python version'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--arch-specific', action='store_true')
-    parser.add_argument('-m', '--mutt', action='store_true')
+    parser.add_argument('-m', '--mutt', action='store_const', const='mutt', dest='mutt')
+    parser.add_argument('-M', '--neomutt', action='store_const', const='neomutt', dest='mutt')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--qa-doublebuild', action='store_true')
     group.add_argument('--python', type=validate_python_version)
