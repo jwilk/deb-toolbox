@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # encoding=UTF-8
 
-# Copyright © 2011-2014 Jakub Wilk <jwilk@jwilk.net>
+# Copyright © 2011-2020 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
 import argparse
