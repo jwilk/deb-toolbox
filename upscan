@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # encoding=UTF-8
 
 # Copyright © 2011-2014 Jakub Wilk <jwilk@jwilk.net>
@@ -30,7 +30,7 @@ def quote_commandline(commandline):
     return ' '.join(pipes.quote(s) for s in commandline)
 
 def find_extension(filename):
-    for ext_in, ext_out in file_extensions.iteritems():
+    for ext_in, ext_out in file_extensions.items():
         if filename.endswith('.' + ext_in):
             return ext_out
 
