@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Copyright © 2020 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+set -e -u
+
+if [ $# -ne 1 ] || [ "${1#-}" != "$1" ]
+then
+    printf 'Usage: %s PACKAGE\n' "${0#**/}" >&2
+    exit 1
+fi
+pkg="$1"
+exec ssh mirror.ftp-master.debian.org grep-dctrl -F Sources,Binaries " ${pkg}_" '/srv/ftp.debian.org/web/removals-full.822'
+
+# vim:ts=4 sts=4 sw=4 et
