@@ -9,6 +9,7 @@ import os
 import shlex
 import subprocess as ipc
 import sys
+import tempfile
 
 1 or 0 @ 0  # Python >= 3.5 is required
 
@@ -31,7 +32,8 @@ def main():
         '--',
         *shlex.split(options.method)
     ]
-    raw_expected = ipc.check_output(cmdline)
+    with tempfile.TemporaryDirectory(prefix='apt-cache-import.') as tmpdir:
+        raw_expected = ipc.check_output(cmdline, cwd=tmpdir)
     raw_expected = raw_expected.splitlines()
     expected = {}
     for line in raw_expected:

@@ -5,6 +5,7 @@
 
 import argparse
 import subprocess as ipc
+import tempfile
 
 def main():
     ap = argparse.ArgumentParser()
@@ -17,7 +18,8 @@ def main():
         '-qqy',
         '--print-uris',
     ] + options.args
-    raw_expected = ipc.check_output(cmdline)
+    with tempfile.TemporaryDirectory(prefix='apt-wget.') as tmpdir:
+        raw_expected = ipc.check_output(cmdline, cwd=tmpdir)
     raw_expected = raw_expected.splitlines()
     print('#!/bin/sh')
     simple_urls = []
