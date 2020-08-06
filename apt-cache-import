@@ -43,8 +43,9 @@ def main():
         expected[name] = xhash
     for path in options.deb:
         name = os.path.basename(path)
+        ename = name.replace(':', '%3a')
         try:
-            xhash = expected[name]
+            xhash = expected[ename]
         except LookupError:
             print('warning: {path}: not planned for install'.format(path=path), file=sys.stderr)
             continue
@@ -57,7 +58,7 @@ def main():
             print('error: {path}: hash mismatch'.format(path=path), file=sys.stderr)
             continue
         src_path = path
-        path = '{dir}/{name}'.format(dir=cache_dir, name=name)
+        path = '{dir}/{name}'.format(dir=cache_dir, name=ename)
         with open(path, 'xb') as file:
             file.write(blob)
         if options.move:
