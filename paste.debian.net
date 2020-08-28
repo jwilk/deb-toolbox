@@ -33,6 +33,7 @@ def do_create_paste(server, options):
     text = options.text
     if text is None:
         text = sys.stdin.read()
+    text = text.encode('UTF-8').decode('ISO-8859-1')  # FIXME
     response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(options.hidden)))
     base_url = urllib.parse.urljoin(options.url, response['base_url'])
     path = str(response['id'])
