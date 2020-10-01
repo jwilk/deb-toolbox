@@ -35,11 +35,9 @@ def do_create_paste(server, options):
         text = sys.stdin.read()
     text = text.encode('UTF-8').decode('ISO-8859-1')  # FIXME
     response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(options.hidden)))
-    base_url = urllib.parse.urljoin(options.url, response['base_url'])
-    path = str(response['id'])
-    if response['hidden']:
-        path = 'hidden/{}'.format(path)
-    print(urllib.parse.urljoin(base_url, path))
+    view_url = response['view_url']
+    view_url = urllib.parse.urljoin(options.url, view_url)
+    print(view_url)
 
 def main():
     default_server = 'https://paste.debian.net/server.pl'
