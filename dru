@@ -8,7 +8,6 @@ yet another debian/rules wrapper
 '''
 
 import argparse
-import multiprocessing as mp
 import os
 import sys
 
@@ -29,7 +28,7 @@ def main():
         deb_build_options += ['nostrip']
     if options.parallel is not False:
         if options.parallel is None:
-            n = mp.cpu_count()
+            n = os.cpu_count() or 1
         else:
             n = options.parallel
         deb_build_options += ['parallel={}'.format(n)]
