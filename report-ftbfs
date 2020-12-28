@@ -16,7 +16,8 @@ import urllib.request
 
 import jinja2
 
-lambda: (yield from 0)  # Python >= 3.3 is required
+if sys.version_info < (3, 4, 3):
+    raise RuntimeError('Python >= 3.4.3 is required')
 
 def get_full_name():
     return (
@@ -107,10 +108,7 @@ def main(options):
     if options.logname.startswith(('http://', 'https://')):
         url = options.logname + '&raw=1'
         request = urllib.request.Request(url, headers={'Accept-Encoding': 'gzip'})
-        ca_options = {}
-        if sys.version_info < (3, 4, 3):
-            ca_options.update(cadefault=True)
-        log_file = urllib.request.urlopen(request, **ca_options)
+        log_file = urllib.request.urlopen(request)
     else:
         url = None
         log_file = open(options.logname, 'rb')
