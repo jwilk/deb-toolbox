@@ -8,7 +8,6 @@ import collections
 import os
 import re
 import subprocess as ipc
-import sys
 
 lambda: (yield from 0)  # Python >= 3.3 is required
 
