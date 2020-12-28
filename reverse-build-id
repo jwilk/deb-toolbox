@@ -74,7 +74,8 @@ def main():
     packages = set()
     for line in dpkg.stdout:
         line = line.decode('ASCII', 'replace')
-        for p in line.split(':', 1)[0].split(','):
+        line = re.sub(r': .*\Z', '', line, flags=re.DOTALL)
+        for p in line.split(','):
             p = p.strip()
             packages |= source_map[binary_map[p]]
     if dpkg.wait() != 0:
