@@ -186,7 +186,7 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--qa-doublebuild', action='store_true')
     group.add_argument('--python', type=validate_python_version)
-    parser.add_argument('logname', metavar='<logfile>')
+    parser.add_argument('logname', metavar='LOGFILE')
     options = parser.parse_args()
     main(options)
 
