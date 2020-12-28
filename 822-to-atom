@@ -120,7 +120,7 @@ class converter(object):
                 e_sponsor_email.text = sponsor_email
             e_content = elem(entry, 'content', type='xhtml')
             e_div = elem(e_content, 'div', nsmap={None: ns_xhtml})
-            e_pre = elem(e_div, 'pre'.format(ns=ns_xhtml))
+            e_pre = elem(e_div, 'pre')
             e_pre.text = str(para)
             entry.tail += '\n'
         feed.tail = '\n'
