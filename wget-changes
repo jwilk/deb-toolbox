@@ -67,8 +67,8 @@ def download_changes(source, version=None):
 
 def main():
     oparser = argparse.ArgumentParser()
-    oparser.add_argument('source')
-    oparser.add_argument('version', nargs='?')
+    oparser.add_argument('source', metavar='SOURCE')
+    oparser.add_argument('version', metavar='VERSION', nargs='?')
     options = oparser.parse_args()
     download_changes(options.source, options.version)
 
