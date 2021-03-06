@@ -46,7 +46,7 @@ def parse_addr(addr):
 
 def fix_email(email):
     # work-around for bug #662024
-    return re.sub('(.*@.*)(@debian[.]org)$', lambda m: m.group(1), email)
+    return re.sub('(.*@.*)(@debian[.]org)$', r'\1', email)
 
 def read_tag_file(file):
     return apt_pkg.TagFile(file)
