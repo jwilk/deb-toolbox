@@ -23,7 +23,7 @@ def print_urls(mirror, indices, hashfn=None):
         output_format = '{hash}  {filename}'
     if hashfn is None or hashfn == 'md5':
         field = 'Files'
-    elif hashfn in ('sha1', 'sha256'):
+    elif hashfn in {'sha1', 'sha256'}:
         field = 'Checksums-{0}'.format(hashfn)
     else:
         raise ValueError
