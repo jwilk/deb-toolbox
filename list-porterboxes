@@ -5,6 +5,7 @@
 
 import argparse
 import collections
+
 import ldap3
 
 exceptions = set()
