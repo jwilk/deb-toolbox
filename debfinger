@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+# Copyright © 2010-2021 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+import argparse
+import collections
+
+import ldap3
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('users', metavar='USER', nargs='+')
+    options = ap.parse_args()
+    escape = ldap3.utils.conv.escape_filter_chars
+    with ldap3.Connection('ldaps://db.debian.org') as lc:
+        query = ''.join(
+            f'(uid={escape(user)})'
+            for user in options.users
+        )
+        query = f'(&(objectClass=inetOrgPerson)(|{query}))'
+        lc.search(
+            'dc=debian,dc=org',
+            query,
+            ldap3.SUBTREE,
+            attributes=['uid', 'cn', 'sn', 'keyFingerPrint']
+        )
+        output = {}
+        for info in lc.entries:
+            [user] = info.uid
+            [cn] = info.cn
+            [sn] = info.sn
+            fprs = info.keyFingerPrint
+            assert len(fprs) <= 1
+            info = [cn, sn, f'<{user}@debian.org>', *fprs]
+            output[user] = tuple(info)
+    for user in options.users:
+        print(*output[user])
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sts=4 sw=4 et
