@@ -12,7 +12,7 @@ exceptions = set()
 
 def get_porterboxes():
     results = collections.defaultdict(list)
-    with ldap3.Connection('db.debian.org') as lc:
+    with ldap3.Connection('ldaps://db.debian.org') as lc:
         lc.search(
             'dc=debian,dc=org',
             '(&(objectClass=debianServer)(purpose=porterbox))',
