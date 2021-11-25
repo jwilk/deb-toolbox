@@ -16,7 +16,7 @@ import subprocess as ipc
 import sys
 import tempfile
 
-lambda: (yield from 0)  # Python >= 3.3 is required
+lambda: (yield from [])  # Python >= 3.3 is required
 
 cwd = os.getcwd()
 sbuild_args = ['sudo', '-u', 'sbuild', '--', '/usr/bin/sbuild']
