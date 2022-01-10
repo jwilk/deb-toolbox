@@ -59,9 +59,9 @@ def do_edit(options):
 def main():
     apt_pkg.init()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--demote', metavar='<library>', action='append')
-    parser.add_argument('--fix-version', metavar='<version>')
-    parser.add_argument('ctrlfile', metavar='<control-file>', type=argparse.FileType('r+'))
+    parser.add_argument('--demote', metavar='LIBRARY', action='append')
+    parser.add_argument('--fix-version', metavar='VERSION')
+    parser.add_argument('ctrlfile', metavar='CONTROL-FILE', type=argparse.FileType('r+'))
     options = parser.parse_args()
     do_edit(options)
 
