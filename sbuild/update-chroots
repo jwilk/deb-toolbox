@@ -13,6 +13,8 @@ do
         apt-get update &&
         apt-get dist-upgrade --auto-remove -y &&
         apt-get clean
+        rm -f /etc/passwd /etc/shadow
+        rm -f /etc/group /etc/gshadow
     "
 done
 
