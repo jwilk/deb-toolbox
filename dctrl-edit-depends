@@ -31,9 +31,8 @@ def do_edit(options):
     except LookupError:
         recommends = []
     new_depends = []
-    demote_regex = re.compile('^({alternative})( .*)$'.format(
-        alternative='|'.join(re.escape(x) for x in options.demote)
-    ))
+    r_alternative = str.join('|', (re.escape(x) for x in options.demote))
+    demote_regex = re.compile(f'^({r_alternative})( .*)$')
     for depends in depends:
         if demote_regex.match(depends):
             recommends += [depends]
@@ -41,18 +40,19 @@ def do_edit(options):
             new_depends += [depends]
     new_depends = ', '.join(new_depends)
     if options.fix_version is not None:
+        para_version = para['Version']
         new_depends = new_depends.replace(
-            '(= {version})'.format(version=para['Version']),
-            '(= {version})'.format(version=options.fix_version),
+            f'(= {para_version})',
+            f'(= {options.fix_version})',
         )
     recommends = ', '.join(recommends)
     options.ctrlfile.seek(0)
     sys.stdout = options.ctrlfile
     for line in str(para).splitlines():
         if line.startswith('Depends:'):
-            print('Depends: {value}'.format(value=new_depends))
+            print(f'Depends: {new_depends}')
             if recommends:
-                print('Recommends: {value}'.format(value=recommends))
+                print(f'Recommends: {recommends}')
         elif line.startswith('Recommends:'):
             pass
         else:
