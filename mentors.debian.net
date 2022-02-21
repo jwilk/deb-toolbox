@@ -109,7 +109,7 @@ def do_lookup(options):
         if req_version is not None and version != req_version:
             continue
         match = None
-        for line in pkgdata['Files'].splitlines():
+        for line in pkgdata['Checksums-Sha256'].splitlines():
             match = dsc_regex.match(line)
             if match is not None:
                 break
