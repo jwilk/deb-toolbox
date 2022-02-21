@@ -49,7 +49,6 @@ def new_package_dict():
 data = collections.defaultdict(new_package_dict)
 
 arch_map = {}
-filenames = sys.argv[1:]
 
 def removesuffix(s, suffix):
     if s.endswith(suffix):
@@ -60,6 +59,11 @@ def error(msg):
     prog = argparse.ArgumentParser().prog
     print(f'{prog}: {msg}', file=sys.stderr)
     sys.exit(1)
+
+ap = argparse.ArgumentParser()
+ap.add_argument('paths', metavar='PATH', nargs='+')
+opts = ap.parse_args()
+filenames = opts.paths
 
 for filename in filenames:
     filename_noext = removesuffix(filename, '.gz')
