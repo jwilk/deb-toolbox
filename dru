@@ -11,9 +11,9 @@ import argparse
 import os
 import sys
 
+0_0  # Python >= 3.6 is required
+
 def main():
-    if sys.version_info < (3, 4):
-        raise RuntimeError('Python >= 3.4 is required')
     ap = argparse.ArgumentParser()
     ap.add_argument('--nocheck', action='store_true')
     ap.add_argument('--noopt', action='store_true')
