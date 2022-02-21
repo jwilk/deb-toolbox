@@ -73,7 +73,7 @@ for path in opts.paths:
     arch_map[path] = arch
 
 for path in opts.paths:
-    print(f'Reading {path}', file=sys.stderr)
+    print(path, '...', end='', file=sys.stderr, flush=True)
     arch = arch_map[path]
     with gzip.open(path) as file:
         skip = True
@@ -91,9 +91,9 @@ for path in opts.paths:
                 package = package.rsplit('/', 1)[-1]
                 data[package][path].add(arch)
         if skip:
+            print(' error', file=sys.stderr, flush=True)
             error(f'{path}: empty file')
-
-print('Writing results', file=sys.stderr)
+    print(f' {n+1} lines read', file=sys.stderr, flush=True)
 
 n_archs = len(frozenset(arch_map.values()))
 for package, package_data in sorted(data.items()):
