@@ -77,7 +77,9 @@ for path in opts.paths:
     arch = arch_map[path]
     with gzip.open(path) as file:
         skip = True
-        for line in file:
+        for n, line in enumerate(file):
+            if n == 0 and not line.startswith(b'This file maps each file '):
+                skip = False
             if skip:
                 if line.startswith(b'FILE'):
                     skip = False
