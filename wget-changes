@@ -61,7 +61,7 @@ def download_changes(source, version=None):
         if version == m.group(1):
             break
     else:
-        raise Exception('no such version')
+        raise RuntimeError('no such version')
     changes_url = etree.fromstring(link.encode('ASCII', 'replace')).get('href')
     changes = wget(changes_url).read().decode('UTF-8')
     changes = _pgpsig(changes).group(1)
