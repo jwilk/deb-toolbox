@@ -72,9 +72,9 @@ def get_sources(options, tmpdir=None):
         fetcher = apt_pkg.Acquire()
     files = {}
     for area in ['main']:
-        uri = '{root}/dists/unstable/{area}/source/Sources.gz'.format(root=mentors_root, area=area)
+        uri = f'{mentors_root}/dists/unstable/{area}/source/Sources.gz'
         description = uri
-        filename = '{tmp}/{area}.sources.gz'.format(tmp=tmpdir, area=area)
+        filename = f'{tmpdir}/{area}.sources.gz'
         files[area] = apt_pkg.AcquireFile(
             fetcher,
             uri=uri,
@@ -101,7 +101,7 @@ def do_lookup(options):
     else:
         pkgname = options.pkgname
         req_version = None
-    dsc_regex = re.compile('^ *[0-9a-f]+ [0-9]+ ({pkgname}_[a-z0-9.:~+-]+[.]dsc)$'.format(pkgname=re.escape(pkgname)))
+    dsc_regex = re.compile(f'^ *[0-9a-f]+ [0-9]+ ({re.escape(pkgname)}_[a-z0-9.:~+-]+[.]dsc)$')
     sources = get_sources(options)[pkgname].items()
     for version, pkgdata in sorted(sources, reverse=True):
         if req_version is not None and version != req_version:
@@ -114,12 +114,8 @@ def do_lookup(options):
         if match is None:
             raise LookupError('Missing .dsc filename')
         [dsc_filename] = match.groups()
-        print('{root}/{directory}/{filename} ({version})'.format(
-            version=version,
-            root=mentors_root,
-            directory=pkgdata['Directory'],
-            filename=dsc_filename,
-        ))
+        pkgdir = pkgdata['Directory']
+        print(f'{mentors_root}/{pkgdir}/{dsc_filename} ({version})')
 
 def do_checkout(options):
     raise NotImplementedError
