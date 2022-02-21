@@ -14,8 +14,7 @@ import xml.etree.ElementTree as etree
 
 from debian import deb822
 
-if sys.version_info < (3, 4, 3):
-    raise RuntimeError('Python >= 3.4.3 is required')
+0_0  # Python >= 3.6 is required
 
 block_size = 0x10000
 
