@@ -56,7 +56,7 @@ for filename in filenames:
     arch_map[filename] = arch
 
 for filename in filenames:
-    print('Reading {}'.format(filename), file=sys.stderr)
+    print(f'Reading {filename}', file=sys.stderr)
     arch = arch_map[filename]
     with gzip.open(filename) as file:
         skip = True
@@ -84,16 +84,16 @@ for package, package_data in sorted(data.items()):
         if len(archs) == n_archs:
             continue
         archs_descr = ','.join(map(str, archs))
-        print('{}/{}'.format(package, archs_descr))
+        print(f'{package}/{archs_descr}')
         print()
     else:
         for archs, filenames in groups.items():
             if len(archs) == n_archs:
                 continue
             archs_descr = ','.join(map(str, archs))
-            print('{}/{}'.format(package, archs_descr))
+            print(f'{package}/{archs_descr}')
             for filename in sorted(filenames):
-                print('  {}'.format(repr(filename)[2:-1]))
+                print(f'  {repr(filename)[2:-1]}')
         print()
 
 # vim:ts=4 sts=4 sw=4 et
