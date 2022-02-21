@@ -55,7 +55,7 @@ class Acquire(apt_pkg.Acquire):
             raise AcquireFailed('fetching files failed')
         for file in self.items:
             if file.status != file.STAT_DONE:
-                raise AcquireFailed('fetching file failed: {uri}'.format(uri=file.desc_uri))
+                raise AcquireFailed(f'fetching file failed: {file.desc_uri}')
 
 class ParseError(RuntimeError):
     pass
@@ -71,20 +71,14 @@ def do_update(options):
     files = {}
     tmpdir = tempfile.mkdtemp(prefix='kc-apt-file.')
     try:
+        mirror = options.mirror
+        dist = options.distribution
+        arch = options.architecture
         for section in options.sections:
-            uri = '{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'.format(
-                mirror=options.mirror,
-                dist=options.distribution,
-                section=section,
-                arch=options.architecture
-            )
+            uri = f'{mirror}/dists/{dist}/{section}/Contents-{arch}.gz'
             files[section] = apt_pkg.AcquireFile(fetcher,
                 uri=uri,
-                descr='{dist}/{section}/Contents-{arch}'.format(
-                    dist=options.distribution,
-                    section=section,
-                    arch=options.architecture
-                ),
+                descr=f'{dist}/{section}/Contents-{arch}',
                 destfile=os.path.join(tmpdir, section),
             )
         fetcher.run()
@@ -98,7 +92,7 @@ def do_update(options):
                     else:
                         match = parse(line)
                         if match is None:
-                            raise ParseError('cannot parse line: {0}'.format(repr(line)[1:]))
+                            raise ParseError(f'cannot parse line: {repr(line)[1:]}')
                         filename, packages = match.groups()
                         for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
                             data[package] += [filename]
@@ -117,9 +111,10 @@ def strings_to_regexp(strings, regexp=False, whole=True):
     if regexp:
         result = '|'.join(strings)
     else:
-        result = '(?:{0})'.format('|'.join(map(re.escape, strings)))
+        r_strings = str.join('|', map(re.escape, strings))
+        result = f'(?:{r_strings})'
         if whole:
-            result = '^{0}$'.format(result)
+            result = f'^{result}$'
     return re.compile(result)
 
 def do_list(options):
@@ -134,7 +129,7 @@ def do_list(options):
                 filenames = zlib.decompress(db[package]).decode('UTF-8')
                 filenames = filenames.splitlines()
                 for filename in filenames:
-                    print('{pkg}: /{file}'.format(pkg=package, file=filename))
+                    print(f'{package}: /{filename}')
     finally:
         db.close()
 
@@ -150,7 +145,7 @@ def do_search(options):
             package = package.decode('ASCII')
             for filename in filenames:
                 if matching('/' + filename):
-                    print('{pkg}: /{file}'.format(pkg=package, file=filename))
+                    print(f'{package}: /{filename}')
     finally:
         db.close()
 
@@ -173,21 +168,22 @@ class default:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cache-file',
-        help='use this cache file (default: {path})'.format(path=get_cache_filename(mkdir=False))
+        help=f'use this cache file (default: {get_cache_filename(mkdir=False)})'
     )
     subparsers = parser.add_subparsers(dest='command')
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
     cmd_update.add_argument('-m', '--mirror', default=default.mirror,
-        help='Debian mirror to use (default: {mirror})'.format(mirror=default.mirror)
+        help=f'Debian mirror to use (default: {default.mirror})'
     )
     cmd_update.add_argument('-a', '--architecture', default=default.architecture,
         help='architecture to use'
     )
     cmd_update.add_argument('-d', '--distribution', default=default.distribution,
-        help='distribution to use (default: {dist})'.format(dist=default.distribution)
+        help=f'distribution to use (default: {default.distribution})'
     )
+    s_sections = str.join(', ', default.sections)
     cmd_update.add_argument('-s', '--sections', metavar='SECTION', nargs='+', default=default.sections,
-        help='distribution to use (default: {sections})'.format(sections=', '.join(default.sections))
+        help=f'distribution to use (default: {s_sections})'
     )
     cmd_update.add_argument('-q', '--quiet', action='store_true')
     cmd_list = subparsers.add_parser('list', help='list files of the package(s)')
