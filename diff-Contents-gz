@@ -63,42 +63,41 @@ def error(msg):
 ap = argparse.ArgumentParser()
 ap.add_argument('paths', metavar='PATH', nargs='+')
 opts = ap.parse_args()
-filenames = opts.paths
 
-for filename in filenames:
-    filename_noext = removesuffix(filename, '.gz')
-    if filename == filename_noext:
-        error(f'{filename}: not a .gz file')
-    basename = os.path.basename(filename_noext)
+for path in opts.paths:
+    path_noext = removesuffix(path, '.gz')
+    if path == path_noext:
+        error(f'{path}: not a .gz file')
+    basename = os.path.basename(path_noext)
     arch = Arch(basename.rsplit('-', 1)[1])
-    arch_map[filename] = arch
+    arch_map[path] = arch
 
-for filename in filenames:
-    print(f'Reading {filename}', file=sys.stderr)
-    arch = arch_map[filename]
-    with gzip.open(filename) as file:
+for path in opts.paths:
+    print(f'Reading {path}', file=sys.stderr)
+    arch = arch_map[path]
+    with gzip.open(path) as file:
         skip = True
         for line in file:
             if skip:
                 if line.startswith(b'FILE'):
                     skip = False
                 continue
-            filename, packages = line.rsplit(None, 1)
-            filename = arch.replace(filename)
+            path, packages = line.rsplit(None, 1)
+            path = arch.replace(path)
             packages = packages.decode('ASCII').split(',')
             for package in packages:
                 package = package.rsplit('/', 1)[-1]
-                data[package][filename].add(arch)
+                data[package][path].add(arch)
         if skip:
-            error(f'{filename}: empty file')
+            error(f'{path}: empty file')
 
 print('Writing results', file=sys.stderr)
 
 n_archs = len(frozenset(arch_map.values()))
 for package, package_data in sorted(data.items()):
     groups = collections.defaultdict(list)
-    for filename, archs in package_data.items():
-        groups[frozenset(archs)] += [filename]
+    for path, archs in package_data.items():
+        groups[frozenset(archs)] += [path]
     if len(groups) == 1:
         [archs] = groups.keys()
         if len(archs) == n_archs:
@@ -107,13 +106,13 @@ for package, package_data in sorted(data.items()):
         print(f'{package}/{archs_descr}')
         print()
     else:
-        for archs, filenames in groups.items():
+        for archs, paths in groups.items():
             if len(archs) == n_archs:
                 continue
             archs_descr = ','.join(map(str, archs))
             print(f'{package}/{archs_descr}')
-            for filename in sorted(filenames):
-                print(f'  {repr(filename)[2:-1]}')
+            for path in sorted(paths):
+                print(f'  {repr(path)[2:-1]}')
         print()
 
 # vim:ts=4 sts=4 sw=4 et
