@@ -85,6 +85,8 @@ for filename in filenames:
             for package in packages:
                 package = package.rsplit('/', 1)[-1]
                 data[package][filename].add(arch)
+        if skip:
+            error(f'{filename}: empty file')
 
 print('Writing results', file=sys.stderr)
 
