@@ -69,7 +69,11 @@ for path in opts.paths:
     if path == path_noext:
         error(f'{path}: not a .gz file')
     basename = os.path.basename(path_noext)
-    arch = Arch(basename.rsplit('-', 1)[1])
+    try:
+        archname = basename.rsplit('-', 1)[1]
+    except IndexError:
+        error(f'{path}: cannot extract architecture name')
+    arch = Arch(archname)
     arch_map[path] = arch
 
 for path in opts.paths:
