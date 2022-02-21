@@ -10,7 +10,7 @@ import os
 import shlex
 import subprocess as ipc
 import sys
-import xml.etree.cElementTree as etree
+import xml.etree.ElementTree as etree
 
 import debian.changelog
 
