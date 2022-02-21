@@ -94,11 +94,8 @@ class converter(object):
             e_title.text = changes = para['Changes-File']
             timestamp = self.get_entry_timestamp(para)
             e_ident = elem(entry, 'id')
-            e_ident.text = '{base_uri}{changes}#{timestamp}'.format(
-                base_uri=self.get_changes_base_uri(),
-                changes=changes,
-                timestamp=rfc3339(timestamp),
-            )
+            base_uri = self.get_changes_base_uri()
+            e_ident.text = f'{base_uri}{changes}#{rfc3339(timestamp)}'
             e_updated = elem(entry, 'updated')
             e_updated.text = rfc3339(timestamp)
             author_name, author_email = parse_addr(para['Changed-By'])
@@ -149,10 +146,9 @@ class convert_new(converter):
             return version
 
     def get_entry_uri(self, para):
-        return 'https://ftp-master.debian.org/new/{source}_{version}.html'.format(
-            source=para['Source'],
-            version=self._get_entry_epochless_version(para)
-        )
+        source = para['Source']
+        version = self._get_entry_epochless_version(para)
+        return f'https://ftp-master.debian.org/new/{source}_{version}.html'
 
     def get_entry_timestamp(self, para):
         return datetime.datetime.utcfromtimestamp(
@@ -181,10 +177,9 @@ class convert_deferred(converter):
         return timestamp
 
     def get_entry_uri(self, para):
-        return '{base_uri}{changes}'.format(
-            base_uri=self.get_changes_base_uri(),
-            changes=para['Changes-File']
-        )
+        base_uri = self.get_changes_base_uri()
+        changes = para['Changes-File']
+        return f'{base_uri}{changes}'
 
     def get_changes_base_uri(self):
         return 'https://ftp-master.debian.org/deferred/'
@@ -193,7 +188,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--type', choices=('new', 'deferred'), required=True)
     options = parser.parse_args()
-    converter = globals()['convert_{type}'.format(type=options.type)]()
+    converter = globals()[f'convert_{options.type}']()
     return converter()
 
 if __name__ == '__main__':
