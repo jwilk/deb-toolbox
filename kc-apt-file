@@ -86,7 +86,9 @@ def do_update(options):
             uri = file.desc_uri
             skip = True
             with gzip.open(file.destfile) as file:
-                for line in file:
+                for n, line in enumerate(file):
+                    if n == 0 and not line.startswith(b'This file maps each file '):
+                        skip = False
                     if skip:
                         if line.startswith(b'FILE'):
                             skip = False
