@@ -41,7 +41,7 @@ def main():
     if any(t.startswith('binary') for t in options.targets):
         commandline += ['fakeroot']
     commandline += ['debian/rules'] + options.targets
-    print('$ {}'.format(' '.join(commandline)))
+    print('$', *commandline)
     os.execvp(commandline[0], commandline)
 
 if __name__ == '__main__':
