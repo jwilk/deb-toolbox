@@ -8,6 +8,8 @@ import sys
 
 import debian.deb822 as deb822
 
+0_0  # Python >= 3.6 is required
+
 fields = [
     'Depends', 'Recommends', 'Suggests', 'Enhances',
     'Conflicts', 'Breaks', 'Replaces',
