@@ -10,6 +10,8 @@ import sys
 import urllib.parse
 import xmlrpc.client
 
+0_0  # Python >= 3.6 is required
+
 class PasteError(RuntimeError):
     pass
 
@@ -41,9 +43,6 @@ def do_create_paste(server, options):
 
 def main():
     default_server = 'https://paste.debian.net/server.pl'
-    # XXX Beware that before Python 3.4.3,
-    # the XML-RPC client did not verify the server's TLS certificate:
-    # https://bugs.python.org/issue13856
     default_username = get_default_username()
     default_expire = 2 * 24 * 60 * 60
     parser = argparse.ArgumentParser()
