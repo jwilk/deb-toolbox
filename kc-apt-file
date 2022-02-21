@@ -83,6 +83,7 @@ def do_update(options):
             )
         fetcher.run()
         for file in files.values():
+            uri = file.desc_uri
             skip = True
             with gzip.open(file.destfile) as file:
                 for line in file:
@@ -96,6 +97,8 @@ def do_update(options):
                         filename, packages = match.groups()
                         for package in [pkg.split(b'/')[-1] for pkg in packages.split(b',')]:
                             data[package] += [filename]
+            if skip:
+                raise ParseError(f'{uri}: empty file')
     finally:
         shutil.rmtree(tmpdir)
     db = kc.DB()
