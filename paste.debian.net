@@ -46,10 +46,10 @@ def main():
     default_username = get_default_username()
     default_expire = 2 * 24 * 60 * 60
     parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help='XML-RPC server (default: {})'.format(default_server))
-    parser.add_argument('-u', '--username', default=default_username, help='name of the submitter (default: {})'.format(default_username))
+    parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help=f'XML-RPC server (default: {default_server})')
+    parser.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
     parser.add_argument('-l', '--language', default='text', help='highlighting language')
-    parser.add_argument('-e', '--expire', type=int, default=default_expire, help='time in seconds from now when the entry should expire (default: {}, i.e. {}h)'.format(default_expire, default_expire // (60 * 60)))
+    parser.add_argument('-e', '--expire', type=int, default=default_expire, help=f'time in seconds from now when the entry should expire (default: {default_expire}, i.e. {default_expire // (60 * 60)}h)')
     parser.add_argument('--hidden', action='store_true', help='hide from frontpage')
     parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
     parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
