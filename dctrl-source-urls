@@ -26,7 +26,7 @@ def print_urls(mirror, indices, hashfn=None):
     if hashfn is None or hashfn == 'md5':
         field = 'Files'
     elif hashfn in {'sha1', 'sha256'}:
-        field = 'Checksums-{0}'.format(hashfn)
+        field = f'Checksums-{hashfn}'
     else:
         raise ValueError
     for index_filename in indices:
@@ -36,7 +36,8 @@ def print_urls(mirror, indices, hashfn=None):
                 try:
                     entries = pkg[field]
                 except KeyError:
-                    print('Skipping: {0}'.format(pkg['package']), file=sys.stderr)
+                    pkg_name = pkg["package"]
+                    print(f'Skipping: {pkg_name}', file=sys.stderr)
                     continue
                 for entry in entries.splitlines():
                     if not entry:
