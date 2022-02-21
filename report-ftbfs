@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import getpass
 import gzip
 import os
 import pwd
@@ -27,7 +28,7 @@ def get_full_name():
 def get_email():
     return (
         os.getenv('DEBEMAIL') or
-        '{login}@{domain}'.format(login=pwd.getpwduid(os.getuid()).pw_name, domain=socket.getfqdn())
+        '{login}@{domain}'.format(login=getpass.getuser(), domain=socket.getfqdn())
     )
 
 mailinglist_map = {
