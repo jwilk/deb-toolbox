@@ -47,6 +47,8 @@ class ArgumentParser(argparse.ArgumentParser):
             self.__subparsers
         except AttributeError:
             self.__subparsers = self.add_subparsers(parser_class=argparse.ArgumentParser)
+            self.__subparsers.dest = 'COMMAND'  # https://bugs.python.org/issue9253
+            self.__subparsers.required = True
         p = self.__subparsers.add_parser(name, **kwargs)
         p.set_defaults(action=globals()['do_' + name])
         return p
