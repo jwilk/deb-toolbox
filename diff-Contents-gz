@@ -10,6 +10,7 @@ import re
 import subprocess as ipc
 import sys
 
+0_0  # Python >= 3.6 is required
 
 def arch_string_key(s):
     return -len(s), s
