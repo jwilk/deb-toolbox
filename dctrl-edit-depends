@@ -17,6 +17,8 @@ import sys
 
 import apt_pkg
 
+0_0  # Python >= 3.6 is required
+
 def do_edit(options):
     [para] = apt_pkg.TagFile(options.ctrlfile)
     try:
