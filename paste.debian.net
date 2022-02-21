@@ -4,8 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
-import os
-import pwd
+import getpass
 import re
 import sys
 import urllib.parse
@@ -15,9 +14,6 @@ import xmlrpc.client
 
 class PasteError(RuntimeError):
     pass
-
-def get_default_username():
-    return pwd.getpwuid(os.getuid()).pw_name
 
 class PasteServer(xmlrpc.client.ServerProxy):
 
@@ -61,7 +57,7 @@ parse_time_delta.__name__ = 'time'
 
 def main():
     default_server = 'https://paste.debian.net/server.pl'
-    default_username = get_default_username()
+    default_username = getpass.getuser()
     default_expire = parse_time_delta('48h')
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help=f'XML-RPC server (default: {default_server})')
