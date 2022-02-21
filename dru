@@ -33,10 +33,10 @@ def main():
             n = os.cpu_count() or 1
         else:
             n = options.parallel
-        deb_build_options += ['parallel={}'.format(n)]
+        deb_build_options += [f'parallel={n}']
     deb_build_options = ' '.join(deb_build_options)
     os.environ['DEB_BUILD_OPTIONS'] = deb_build_options
-    print('export DEB_BUILD_OPTIONS="{}"'.format(deb_build_options), file=sys.stderr)
+    print(f'export DEB_BUILD_OPTIONS="{deb_build_options}"', file=sys.stderr)
     commandline = []
     if any(t.startswith('binary') for t in options.targets):
         commandline += ['fakeroot']
