@@ -6,6 +6,7 @@
 import argparse
 import os
 import pwd
+import re
 import sys
 import urllib.parse
 import xmlrpc.client
@@ -41,15 +42,32 @@ def do_create_paste(server, options):
     view_url = urllib.parse.urljoin(options.url, view_url)
     print(view_url)
 
+def parse_time_delta(s):
+    item_re = '[0-9]+[smhd]'
+    if not re.fullmatch(f'({item_re})+', s):
+        raise ValueError
+    dt = 0
+    for item in re.findall(item_re, s):
+        n = int(item[:-1])
+        unit = item[-1]
+        dt += n * dict(
+            d = 24 * 60 * 60,
+            h =      60 * 60,
+            m =           60,
+            s =            1,
+        )[unit]
+    return dt
+parse_time_delta.__name__ = 'time'
+
 def main():
     default_server = 'https://paste.debian.net/server.pl'
     default_username = get_default_username()
-    default_expire = 2 * 24 * 60 * 60
+    default_expire = parse_time_delta('48h')
     parser = argparse.ArgumentParser()
     parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help=f'XML-RPC server (default: {default_server})')
     parser.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
     parser.add_argument('-l', '--language', default='text', help='highlighting language')
-    parser.add_argument('-e', '--expire', type=int, default=default_expire, help=f'time in seconds from now when the entry should expire (default: {default_expire}, i.e. {default_expire // (60 * 60)}h)')
+    parser.add_argument('-e', '--expire', type=parse_time_delta, default=default_expire, help=f'when the entry should expire (default: {default_expire // (60 * 60)}h)')
     parser.add_argument('--hidden', action='store_true', help='hide from frontpage')
     parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
     parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
