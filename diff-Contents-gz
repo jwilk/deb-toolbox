@@ -10,7 +10,6 @@ import re
 import subprocess as ipc
 import sys
 
-bitbucket = open(os.devnull, 'w')
 
 def arch_string_key(s):
     return -len(s), s
