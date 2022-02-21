@@ -3,6 +3,7 @@
 # Copyright © 2010-2014 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
+import argparse
 import collections
 import gzip
 import os
@@ -50,8 +51,21 @@ data = collections.defaultdict(new_package_dict)
 arch_map = {}
 filenames = sys.argv[1:]
 
+def removesuffix(s, suffix):
+    if s.endswith(suffix):
+        return s[:-len(suffix)]
+    return s
+
+def error(msg):
+    prog = argparse.ArgumentParser().prog
+    print(f'{prog}: {msg}', file=sys.stderr)
+    sys.exit(1)
+
 for filename in filenames:
-    basename, _ = os.path.splitext(os.path.basename(filename))
+    filename_noext = removesuffix(filename, '.gz')
+    if filename == filename_noext:
+        error(f'{filename}: not a .gz file')
+    basename = os.path.basename(filename_noext)
     arch = Arch(basename.split('-', 1)[1])
     arch_map[filename] = arch
 
