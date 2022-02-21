@@ -64,7 +64,7 @@ if options.current_version:
     options.version = changelog.upstream_version
 if options.version is not None:
     commandline += ['--download-version', options.version]
-logging.debug('+ %s', sh_quote(commandline))
+logging.debug(f'+ {sh_quote(commandline)}')
 if options.insecure:
     os.environ['PERL_LWP_SSL_VERIFY_HOSTNAME'] = '0'
 pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
@@ -82,26 +82,22 @@ if extension is None:
     logging.warning('Unknown file extension; using tar.gz as a wild guess')
     extension = 'tar.gz'
 
-target = '{package}_{version}.orig.{extension}'.format(
-    package=package,
-    version=upstream_version,
-    extension=extension,
-)
+target = f'{package}_{upstream_version}.orig.{extension}'
 try:
     os.makedirs(options.target_directory)
 except OSError:
     pass
 target = os.path.join(options.target_directory, target)
-logging.debug('%s --> %s', upstream_url, target)
+logging.debug(f'{upstream_url} --> {target}')
 if os.path.exists(target) and os.path.getsize(target) > 0:
     if not options.force:
-        logging.info('%s is already there; use --force to overwrite.', target)
+        logging.info(f'{target} is already there; use --force to overwrite.')
         sys.exit(0)
 
 commandline = ['wget', '-O', target, '--', upstream_url]
 if options.insecure:
     commandline[1:1] = ['--no-check-certificate']
-logging.debug('+ %s', sh_quote(commandline))
+logging.debug(f'+ {sh_quote(commandline)}')
 pipe = ipc.Popen(commandline)
 pipe.wait()
 
