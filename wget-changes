@@ -28,8 +28,11 @@ def wget(url):
 def download_file(changes_item):
     sha1 = changes_item['sha1']
     url = f'https://snapshot.debian.org/file/{sha1}'
+    path = changes_item['name']
+    if '/' in path:
+        raise RuntimeError(f'invalid file name {path!r}')
     with contextlib.closing(wget(url)) as in_file:
-        with open(changes_item['name'], 'wb') as out_file:
+        with open(path, 'wb') as out_file:
             while True:
                 block = in_file.read(block_size)
                 if not block:
