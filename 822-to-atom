@@ -20,6 +20,8 @@ import lxml.etree as etree
 
 import apt_pkg
 
+0_0  # Python >= 3.6 is required
+
 ns_atom = 'http://www.w3.org/2005/Atom'
 ns_xhtml = 'http://www.w3.org/1999/xhtml'
 
