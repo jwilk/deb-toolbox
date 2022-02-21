@@ -28,7 +28,7 @@ file_extensions = {
     'zip': 'zip',
 }
 
-def quote_commandline(commandline):
+def sh_quote(commandline):
     return str.join(' ', map(shlex.quote, commandline))
 
 def find_extension(filename):
@@ -64,7 +64,7 @@ if options.current_version:
     options.version = changelog.upstream_version
 if options.version is not None:
     commandline += ['--download-version', options.version]
-logging.debug('+ %s', quote_commandline(commandline))
+logging.debug('+ %s', sh_quote(commandline))
 if options.insecure:
     os.environ['PERL_LWP_SSL_VERIFY_HOSTNAME'] = '0'
 pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
@@ -101,7 +101,7 @@ if os.path.exists(target) and os.path.getsize(target) > 0:
 commandline = ['wget', '-O', target, '--', upstream_url]
 if options.insecure:
     commandline[1:1] = ['--no-check-certificate']
-logging.debug('+ %s', quote_commandline(commandline))
+logging.debug('+ %s', sh_quote(commandline))
 pipe = ipc.Popen(commandline)
 pipe.wait()
 
