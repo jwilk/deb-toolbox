@@ -12,6 +12,8 @@ import sys
 
 from debian import deb822
 
+0_0  # Python >= 3.6 is required
+
 default_mirror = 'https://deb.debian.org/debian'
 
 def print_urls(mirror, indices, hashfn=None):
