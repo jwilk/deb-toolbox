@@ -26,7 +26,8 @@ def wget(url):
     return urllib.request.urlopen(url)
 
 def download_file(changes_item):
-    url = 'https://snapshot.debian.org/file/{hash}'.format(hash=changes_item['sha1'])
+    sha1 = changes_item['sha1']
+    url = f'https://snapshot.debian.org/file/{sha1}'
     with contextlib.closing(wget(url)) as in_file:
         with open(changes_item['name'], 'wb') as out_file:
             while True:
@@ -38,7 +39,7 @@ def download_file(changes_item):
 def download_changes(source, version=None):
     prefix_length = 1 if not source.startswith('lib') else 4
     prefix = source[:prefix_length]
-    news_url = 'https://packages.qa.debian.org/{s}/{src}/news.rss20.xml'.format(s=prefix, src=source)
+    news_url = f'https://packages.qa.debian.org/{prefix}/{source}/news.rss20.xml'
     news = wget(news_url)
     news = etree.parse(news)
     for item in news.iter('item'):
@@ -56,7 +57,7 @@ def download_changes(source, version=None):
     changes = wget(changes_url).read().decode('UTF-8')
     changes = _pgpsig(changes).group(1)
     changes = html.unescape(changes)
-    with open('{src}_{ver}_snapshot.changes'.format(src=source, ver=version), 'wt', encoding='UTF-8') as out_file:
+    with open(f'{source}_{version}_snapshot.changes', 'wt', encoding='UTF-8') as out_file:
         out_file.write(changes)
     changes = io.StringIO(changes)
     changes = deb822.Changes.gpg_stripped_paragraph(changes)
