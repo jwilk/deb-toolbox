@@ -20,7 +20,7 @@ parse_readelf_n = re.compile(br'^\s+Build ID: ([0-9a-f]{40,})$').match
 def ident_to_path(ident):
     if is_build_id(ident):
         ident = ident.lower()
-        return '/usr/lib/debug/.build-id/{0}/{1}.debug'.format(ident[:2], ident[2:])
+        return f'/usr/lib/debug/.build-id/{ident[:2]}/{ident[2:]}.debug'
     else:
         return os.path.realpath(ident)
 
@@ -67,7 +67,7 @@ def main():
     for path in paths:
         build_id = extract_build_id(path)
         if build_id is None:
-            raise ValueError('cannot determine build-id: {path}'.format(path=path))
+            raise ValueError(f'cannot determine build-id: {path}')
         interesting_build_ids.add(build_id)
     dpkg = ipc.Popen(['dpkg', '-S'] + paths, stdout=ipc.PIPE)
     source_map, binary_map = get_maps()
