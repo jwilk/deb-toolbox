@@ -35,11 +35,11 @@ def parse(file, options):
                         subrelation['version'] = None
                 if options.alternatives is alt_all:
                     value = deb822.PkgRelation.str([relation])
-                    print('{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=value))
+                    print(f'{pkg_name}\t{field}\t{value}')
                 else:
                     for subrelation in relation:
                         subvalue = deb822.PkgRelation.str([[subrelation]])
-                        print('{package}\t{field}\t{value}'.format(package=pkg_name, field=field, value=subvalue))
+                        print(f'{pkg_name}\t{field}\t{subvalue}')
                         if options.alternatives is alt_first:
                             break
 
