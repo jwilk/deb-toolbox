@@ -29,7 +29,7 @@ file_extensions = {
 }
 
 def quote_commandline(commandline):
-    return ' '.join(shlex.quote(s) for s in commandline)
+    return str.join(' ', map(shlex.quote, commandline))
 
 def find_extension(filename):
     for ext_in, ext_out in file_extensions.items():
