@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+
+# Copyright © 2022 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+import argparse
+import os
+import subprocess
+import tempfile
+
+import debianbts
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('no', metavar='NO', type=int)
+    opts = ap.parse_args()
+    [bug] = debianbts.get_status(opts.no)
+    with tempfile.TemporaryDirectory(prefix='bts-retitle.') as tmpdir:
+        path = f'{tmpdir}/{opts.no}.txt'
+        with open(path, 'w') as file:
+            print(bug.subject, file=file)
+        subprocess.check_call(['sensible-editor', path])
+        with open(path, 'r') as file:
+            new_subject = file.read()
+    new_subject = new_subject.strip()
+    os.execvp('bts', ['bts', '--', 'retitle', str(opts.no), new_subject])
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sts=4 sw=4 et
