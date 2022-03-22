@@ -5,7 +5,7 @@
 
 if [ $# = 0 ]
 then
-    printf 'Usage: %s <changes>...\n' "$0" >&2
+    printf 'Usage: %s <changes>...\n' "${0#**/}" >&2
     exit 1
 fi
 
