@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+
+# Copyright © 2022 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+import argparse
+
+import debianbts
+
+0_0  # Python >= 3.6 is required
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.parse_args()
+    bugs = debianbts.get_bugs(package='wnpp')
+    bugs.sort(reverse=True)
+    batch_size = 100
+    for i in range(0, len(bugs), batch_size):
+        chunk = bugs[i:(i + batch_size)]
+        chunk = debianbts.get_status(chunk)
+        for bug in chunk:
+            assert not bug.archived
+            if any(n < bug.bug_num for n in bug.mergedwith):
+                continue
+            print(f'#{bug.bug_num} {bug.subject}')
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sts=4 sw=4 et
