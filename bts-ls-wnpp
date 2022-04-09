@@ -4,14 +4,18 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import re
 
 import debianbts
 
 0_0  # Python >= 3.6 is required
 
+check_subject = re.compile(r'(O|RFA|RFH|ITA|ITP|RFP): [a-z0-9][a-z0-9+.-]+ -- \S.*(?<=\S)').fullmatch
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.parse_args()
+    ap.add_argument('--bad-subject', action='store_true')
+    options = ap.parse_args()
     bugs = debianbts.get_bugs(package='wnpp')
     bugs.sort(reverse=True)
     batch_size = 100
@@ -20,6 +24,8 @@ def main():
         chunk = debianbts.get_status(chunk)
         for bug in chunk:
             assert not bug.archived
+            if options.bad_subject and check_subject(bug.subject):
+                continue
             if any(n < bug.bug_num for n in bug.mergedwith):
                 continue
             print(f'#{bug.bug_num} {bug.subject}')
