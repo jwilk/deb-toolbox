@@ -10,6 +10,8 @@ import tempfile
 
 import debianbts
 
+0_0  # Python >= 3.6 is required
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('no', metavar='NO', type=int)
