@@ -22,7 +22,8 @@ mkdir -p "$tmpdir/b/$base2/"
 dpkg-deb --raw-extract "$deb2" "$tmpdir/b/$base2/"
 cd "$tmpdir"
 rc=0
-diff -urN "a/$base1/" "b/$base2/" || rc=$?
+git init --quiet .
+git diff --no-index --src-prefix='' --dst-prefix='' "a/$base1/" "b/$base2/" || rc=$?
 cd /
 rm -rf "$tmpdir"
 exit $rc
