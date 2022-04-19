@@ -5,7 +5,7 @@
 
 if [ $# -ne 2 ]
 then
-    printf 'Usage: %s <deb1> <deb2>\n' "$0"
+    printf 'Usage: %s DEB1 DEB2\n' "$0"
     exit 1
 fi
 
