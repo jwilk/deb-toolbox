@@ -13,8 +13,8 @@ set -e
 
 deb1="$1"
 deb2="$2"
-base1=$(basename "$deb1" .deb)
-base2=$(basename "$deb2" .deb)
+base1=${deb1##*/}
+base2=${deb2##*/}
 tmpdir=$(mktemp -t -d deepdebdiff.XXXXXX)
 mkdir -p "$tmpdir/a/$base1/"
 dpkg-deb --raw-extract "$deb1" "$tmpdir/a/$base1/"
