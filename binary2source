@@ -3,8 +3,8 @@
 # Copyright © 2010-2018 Jakub Wilk <jwilk@jwilk.net>
 # SPDX-License-Identifier: MIT
 
-regex=$(sed -e 's/\([.+]\)/\\\1/g' | tr '\n' '|')
-regex="(^| )(${regex%'|'})(,|$)"
-grep-aptavail -F Package -e "$regex" -n -s Source:Package \
+regexp=$(sed -e 's/\([.+]\)/\\\1/g' | tr '\n' '|')
+regexp="(^| )(${regexp%'|'})(,|$)"
+grep-aptavail -F Package -e "$regexp" -n -s Source:Package \
 | cut -d ' ' -f 1 \
 | sort -u
