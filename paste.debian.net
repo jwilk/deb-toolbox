@@ -33,7 +33,7 @@ def do_create_paste(server, options):
     if text is None:
         text = sys.stdin.read()
     text = text.encode('UTF-8').decode('ISO-8859-1')  # FIXME
-    response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(options.hidden)))
+    response = server.call('addPaste', text, options.username, options.expire, options.language, int(bool(not options.public)))
     view_url = response['view_url']
     view_url = urllib.parse.urljoin(options.url, view_url)
     print(view_url)
@@ -64,7 +64,7 @@ def main():
     parser.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
     parser.add_argument('-l', '--language', default='text', help='highlighting language')
     parser.add_argument('-e', '--expire', type=parse_time_delta, default=default_expire, help=f'when the entry should expire (default: {default_expire // (60 * 60)}h)')
-    parser.add_argument('--hidden', action='store_true', help='hide from frontpage')
+    parser.add_argument('--public', action='store_true', help='make the paste public')
     parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
     parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
     options = parser.parse_args()
