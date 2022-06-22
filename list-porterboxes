@@ -41,7 +41,7 @@ def main():
     oparser = argparse.ArgumentParser()
     oparser.add_argument('-u', '--unique', action='store_true')
     oparser.add_argument('--dns', action='store_true')
-    oparser.add_argument('architecture', metavar='<architecture>', nargs='?')
+    oparser.add_argument('architecture', metavar='ARCHITECTURE', nargs='?')
     options = oparser.parse_args()
     if options.dns:
         options.unique = True
