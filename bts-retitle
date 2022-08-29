@@ -25,7 +25,8 @@ def main():
         with open(path, 'r') as file:
             new_subject = file.read()
     new_subject = new_subject.strip()
-    os.execvp('bts', ['bts', '--', 'retitle', str(opts.no), new_subject])
+    cmdline = ['bts', '--', 'retitle', str(opts.no), new_subject]
+    os.execvp(cmdline[0], cmdline)
 
 if __name__ == '__main__':
     main()
