@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import shlex
 import subprocess
 import tempfile
 
@@ -14,6 +15,7 @@ import debianbts
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('-n', '--dry-run', action='store_true')
     ap.add_argument('no', metavar='NO', type=int)
     opts = ap.parse_args()
     [bug] = debianbts.get_status(opts.no)
@@ -26,7 +28,10 @@ def main():
             new_subject = file.read()
     new_subject = new_subject.strip()
     cmdline = ['bts', '--', 'retitle', str(opts.no), new_subject]
-    os.execvp(cmdline[0], cmdline)
+    if opts.dry_run:
+        print(*map(shlex.quote, cmdline))
+    else:
+        os.execvp(cmdline[0], cmdline)
 
 if __name__ == '__main__':
     main()
