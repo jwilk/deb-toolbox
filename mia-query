@@ -1,0 +1,3 @@
+#!/bin/sh
+printf '%s\0' "$@" \
+| exec ssh qa.debian.org 'xargs -0 /org/qa.debian.org/mia/mia-query'
