@@ -1,2 +1,3 @@
 #!/bin/sh
-exec ssh mirror.ftp-master.debian.org dak "$@"
+printf '%s\0' "$@" \
+| exec ssh mirror.ftp-master.debian.org 'xargs -0 dak'
