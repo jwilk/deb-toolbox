@@ -17,8 +17,8 @@ BEGIN {
         if ("@args" =~ m/^command -v wget /) {
             return 0;
         }
-        if (@args == 4 and $args[0] eq 'wget' and $args[1] eq '-O') {
-            my (undef, undef, $file, $url) = @_;
+        if (@args >= 4 and $args[0] eq 'wget' and $args[-3] eq '-O') {
+            my ($file, $url) = splice @args, -2, 2;
             @args = (qw(/usr/lib/apt/apt-helper download-file), $url, $file);
         }
         return CORE::system @args;
