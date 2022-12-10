@@ -21,6 +21,9 @@ BEGIN {
             my ($file, $url) = splice @args, -2, 2;
             @args = (qw(/usr/lib/apt/apt-helper download-file), $url, $file);
         }
+        if (@args >= 1 and ($args[0] eq 'wget' or $args[0] eq 'curl')) {
+            die "unsupported command: @args";
+        }
         return CORE::system @args;
     };
 }
