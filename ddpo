@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Copyright © 2017-2022 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+set -e -u
+
+urlescape()
+{
+    perl -E '$_ = $ARGV[0]; s/[^\w.-]/sprintf "%%%02X", ord $&/ge; say $_' "$@"
+}
+
+if [ $# -ne 1 ]
+then
+    printf 'Usage: %s LOGIN\n' "${0##*/}" >&2
+    exit 1
+fi
+
+login="$1"
+ulogin=$(urlescape "$login")
+url="https://qa.debian.org/developer.php?login=$ulogin&comaint=yes&ubuntu=yes&bugs=3&bin=0&buildd=1&section=0&ordering=1"
+exec sensible-browser "$url"
