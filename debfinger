@@ -24,7 +24,7 @@ def main():
             'dc=debian,dc=org',
             query,
             ldap3.SUBTREE,
-            attributes=['uid', 'cn', 'sn', 'keyFingerPrint']
+            attributes=['uid', 'cn', 'sn', 'keyFingerPrint', 'ircNick']
         )
         output = {}
         for info in lc.entries:
@@ -33,7 +33,9 @@ def main():
             [sn] = info.sn
             fprs = info.keyFingerPrint
             assert len(fprs) <= 1
-            info = [cn, sn, f'<{user}@debian.org>', *fprs]
+            nicks = info.ircNick
+            assert len(nicks) <= 1
+            info = [cn, sn, f'<{user}@debian.org>', *fprs, *(f'(IRC: {nick})' for nick in nicks)]
             output[user] = tuple(info)
     for user in options.users:
         print(*output[user])
