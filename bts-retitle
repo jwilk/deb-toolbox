@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import logging
 import os
 import shlex
 import subprocess
@@ -18,6 +19,7 @@ def main():
     ap.add_argument('-n', '--dry-run', action='store_true')
     ap.add_argument('no', metavar='NO', type=int)
     opts = ap.parse_args()
+    logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
     [bug] = debianbts.get_status(opts.no)
     with tempfile.TemporaryDirectory(prefix='bts-retitle.') as tmpdir:
         path = f'{tmpdir}/{opts.no}.txt'
