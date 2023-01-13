@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import logging
 import re
 
 import debianbts
@@ -16,6 +17,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--bad-subject', action='store_true')
     options = ap.parse_args()
+    logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
     bugs = debianbts.get_bugs(package='wnpp')
     bugs.sort(reverse=True)
     batch_size = 100
