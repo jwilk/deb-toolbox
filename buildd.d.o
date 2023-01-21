@@ -17,7 +17,7 @@ then
 fi
 
 pkg="$1"
-pkg=$(apt-cache showsrc -- "$pkg" | grep-dctrl -ns Package '')
+pkg=$(apt-cache showsrc -- "$pkg" | grep-dctrl -ns Package '' | sort -u)
 upkg=$(urlescape "$pkg")
 url="https://buildd.debian.org/status/package.php?p=$upkg"
 exec sensible-browser "$url"
