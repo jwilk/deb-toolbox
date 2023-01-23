@@ -17,7 +17,27 @@ then
 fi
 
 pkg="$1"
-pkg=$(apt-cache showsrc -- "$pkg" | grep-dctrl -ns Package '' | sort -u)
+pkgs=$(apt-cache showsrc -- "$pkg" | grep-dctrl -ns Package '' | sort -u)
+if [ -z "$pkgs" ]
+then
+    printf '%s: cannot resolve package name: %s\n' "${0##*/}" "$1"
+    exit 1
+fi
+n=0
+for pkg in $pkgs
+do
+    if [ "$pkg" = "$1" ]
+    then
+        n=1
+        break
+    fi
+    n=$((n + 1))
+done
+if [ $n -ne 1 ]
+then
+    printf '%s: cannot disambiguate package name: %s\n' "${0##*/}" "$1"
+    exit 1
+fi
 upkg=$(urlescape "$pkg")
 url="https://buildd.debian.org/status/package.php?p=$upkg"
 exec sensible-browser "$url"
