@@ -79,6 +79,7 @@ for path in opts.paths:
 for path in opts.paths:
     print(path, '...', end='', file=sys.stderr, flush=True)
     arch = arch_map[path]
+    n = -1
     with gzip.open(path) as file:
         skip = True
         for n, line in enumerate(file):
@@ -97,6 +98,7 @@ for path in opts.paths:
         if skip:
             print(' error', file=sys.stderr, flush=True)
             error(f'{path}: empty file')
+    assert n >= 0
     print(f' {n+1} lines read', file=sys.stderr, flush=True)
 
 n_archs = len(frozenset(arch_map.values()))
