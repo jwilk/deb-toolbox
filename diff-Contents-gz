@@ -108,14 +108,14 @@ for package, package_data in sorted(data.items()):
         [archs] = groups.keys()
         if len(archs) == n_archs:
             continue
-        archs_descr = ','.join(map(str, archs))
+        archs_descr = str.join(',', map(str, archs))
         print(f'{package}/{archs_descr}')
         print()
     else:
         for archs, paths in groups.items():
             if len(archs) == n_archs:
                 continue
-            archs_descr = ','.join(map(str, archs))
+            archs_descr = str.join(',', map(str, archs))
             print(f'{package}/{archs_descr}')
             for path in sorted(paths):
                 print(f'  {repr(path)[2:-1]}')
