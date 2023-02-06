@@ -14,7 +14,9 @@ def main():
             if not line:
                 continue
             size += int(line.split()[1])
-        print('{size}\t{pkg}\t{ver}'.format(size=size, pkg=pkg['Package'], ver=pkg['Version']))
+        pkgname = pkg['Package']
+        version = pkg['Version']
+        print(f'{size}\t{pkgname}\t{version}')
 
 if __name__ == '__main__':
     main()
