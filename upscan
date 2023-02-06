@@ -98,7 +98,6 @@ commandline = ['wget', '-O', target, '--', upstream_url]
 if options.insecure:
     commandline[1:1] = ['--no-check-certificate']
 logging.debug(f'+ {sh_quote(commandline)}')
-pipe = ipc.Popen(commandline)
-pipe.wait()
+ipc.check_call(commandline):
 
 # vim:ts=4 sts=4 sw=4 et
