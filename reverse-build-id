@@ -29,15 +29,13 @@ def extract_build_id(path, quiet=False):
         stderr = ipc.DEVNULL
     else:
         stderr = None
-    readelf = ipc.Popen(['readelf', '-n', path], stdout=ipc.PIPE, stderr=stderr)
     build_id = None
-    for line in readelf.stdout:
-        if build_id is None:
-            match = parse_readelf_n(line)
-            if match is not None:
-                build_id = match.group(1).decode('ASCII')
-    if build_id is None:
-        readelf.wait()
+    with ipc.Popen(['readelf', '-n', path], stdout=ipc.PIPE, stderr=stderr) as readelf:
+        for line in readelf.stdout:
+            if build_id is None:
+                match = parse_readelf_n(line)
+                if match is not None:
+                    build_id = match.group(1).decode('ASCII')
     if readelf.wait() != 0:
         build_id = None
     return build_id
@@ -45,15 +43,15 @@ def extract_build_id(path, quiet=False):
 def get_maps():
     source_map = collections.defaultdict(set)
     binary_map = {}
-    dpkg = ipc.Popen(['dpkg-query', '-W', '-f', '${binary:Package} ${Source}\n'], stdout=ipc.PIPE)
-    for line in dpkg.stdout:
-        line = line.decode('ASCII').rstrip()
-        binpkg, *source = line.split()
-        if not source:
-            source = [binpkg]
-        source = source[0]
-        source_map[source].add(binpkg)
-        binary_map[binpkg] = source
+    with ipc.Popen(['dpkg-query', '-W', '-f', '${binary:Package} ${Source}\n'], stdout=ipc.PIPE) as dpkg:
+        for line in dpkg.stdout:
+            line = line.decode('ASCII').rstrip()
+            binpkg, *source = line.split()
+            if not source:
+                source = [binpkg]
+            source = source[0]
+            source_map[source].add(binpkg)
+            binary_map[binpkg] = source
     if dpkg.wait() != 0:
         raise DpkgError
     return source_map, binary_map
@@ -69,31 +67,31 @@ def main():
         if build_id is None:
             raise ValueError(f'cannot determine build-id: {path}')
         interesting_build_ids.add(build_id)
-    dpkg = ipc.Popen(['dpkg', '-S'] + paths, stdout=ipc.PIPE)
-    source_map, binary_map = get_maps()
-    packages = set()
-    for line in dpkg.stdout:
-        line = line.decode('ASCII', 'replace')
-        line = re.sub(r': .*\Z', '', line, flags=re.DOTALL)
-        for p in line.split(','):
-            p = p.strip()
-            packages |= source_map[binary_map[p]]
+    with ipc.Popen(['dpkg', '-S'] + paths, stdout=ipc.PIPE) as dpkg:
+        source_map, binary_map = get_maps()
+        packages = set()
+        for line in dpkg.stdout:
+            line = line.decode('ASCII', 'replace')
+            line = re.sub(r': .*\Z', '', line, flags=re.DOTALL)
+            for p in line.split(','):
+                p = p.strip()
+                packages |= source_map[binary_map[p]]
     if dpkg.wait() != 0:
         raise DpkgError
-    dpkg = ipc.Popen(['dpkg', '-L'] + list(packages), stdout=ipc.PIPE)
-    for line in dpkg.stdout:
-        assert line[-1] == b'\n'[0]
-        path = line[:-1]
-        del line
-        if os.path.islink(path):
-            continue
-        if os.path.isdir(path):
-            continue
-        if path.startswith(b'/usr/lib/debug/'):
-            continue
-        build_id = extract_build_id(path, quiet=True)
-        if build_id in interesting_build_ids:
-            print(build_id, path.decode('ASCII'), sep='\t')
+    with ipc.Popen(['dpkg', '-L'] + list(packages), stdout=ipc.PIPE) as dpkg:
+        for line in dpkg.stdout:
+            assert line[-1] == b'\n'[0]
+            path = line[:-1]
+            del line
+            if os.path.islink(path):
+                continue
+            if os.path.isdir(path):
+                continue
+            if path.startswith(b'/usr/lib/debug/'):
+                continue
+            build_id = extract_build_id(path, quiet=True)
+            if build_id in interesting_build_ids:
+                print(build_id, path.decode('ASCII'), sep='\t')
     if dpkg.wait() != 0:
         raise DpkgError
 
