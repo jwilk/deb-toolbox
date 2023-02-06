@@ -67,9 +67,8 @@ if options.version is not None:
 logging.debug(f'+ {sh_quote(commandline)}')
 if options.insecure:
     os.environ['PERL_LWP_SSL_VERIFY_HOSTNAME'] = '0'
-pipe = ipc.Popen(commandline, stdout=ipc.PIPE)
-dehs = etree.parse(pipe.stdout)
-pipe.wait()
+with ipc.Popen(commandline, stdout=ipc.PIPE) as pipe:
+    dehs = etree.parse(pipe.stdout)
 
 package = dehs.find('package').text
 
