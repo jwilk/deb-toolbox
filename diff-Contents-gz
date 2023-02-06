@@ -16,7 +16,7 @@ import sys
 def arch_string_key(s):
     return -len(s), s
 
-class Arch(object):
+class Arch():
 
     _cache = {}
 
