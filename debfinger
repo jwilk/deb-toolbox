@@ -15,10 +15,10 @@ def main():
     options = ap.parse_args()
     escape = ldap3.utils.conv.escape_filter_chars
     with ldap3.Connection('ldaps://db.debian.org') as lc:
-        query = ''.join(
+        query = str.join('', (
             f'(uid={escape(user)})'
             for user in options.users
-        )
+        ))
         query = f'(&(objectClass=inetOrgPerson)(|{query}))'
         lc.search(
             'dc=debian,dc=org',
