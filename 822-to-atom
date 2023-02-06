@@ -32,7 +32,7 @@ def elem(parent, name, tail='\n', nsmap=None, **attrib):
     if parent.text is None:
         parent.text = '\n'
     result = etree.SubElement(parent, name, attrib=attrib, nsmap=nsmap)
-    result.tail = '\n'
+    result.tail = tail
     return result
 
 def parse_addr(addr):
