@@ -30,7 +30,7 @@ def print_urls(mirror, indices, hashfn=None):
     else:
         raise ValueError
     for index_filename in indices:
-        with open(index_filename) as index:
+        with open(index_filename, encoding='UTF-8') as index:
             for pkg in deb822.Packages.iter_paragraphs(index):
                 directory = mirror + pkg.get('directory', '') + '/'
                 try:
