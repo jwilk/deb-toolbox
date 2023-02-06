@@ -53,7 +53,7 @@ def fix_email(email):
 def read_tag_file(file):
     return apt_pkg.TagFile(file)
 
-class converter(object):
+class converter():
 
     def get_title(self):
         raise NotImplementedError
