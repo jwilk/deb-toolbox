@@ -34,7 +34,7 @@ def main():
         else:
             n = options.parallel
         deb_build_options += [f'parallel={n}']
-    deb_build_options = ' '.join(deb_build_options)
+    deb_build_options = str.join(' ', deb_build_options)
     os.environ['DEB_BUILD_OPTIONS'] = deb_build_options
     print(f'export DEB_BUILD_OPTIONS="{deb_build_options}"', file=sys.stderr)
     commandline = []
