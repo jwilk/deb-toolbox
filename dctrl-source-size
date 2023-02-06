@@ -7,6 +7,8 @@ import sys
 
 import debian.deb822 as deb
 
+0_0  # Python >= 3.6 is required
+
 def main():
     for pkg in deb.Packages.iter_paragraphs(sys.stdin):
         size = 0
