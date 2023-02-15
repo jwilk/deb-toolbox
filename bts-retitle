@@ -17,6 +17,7 @@ import debianbts
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('-n', '--dry-run', action='store_true')
+    ap.add_argument('-c', '--comment')
     ap.add_argument('no', metavar='NO', type=int)
     opts = ap.parse_args()
     logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
@@ -30,6 +31,8 @@ def main():
             new_subject = file.read()
     new_subject = new_subject.strip()
     cmdline = ['bts', '--', 'retitle', str(opts.no), new_subject]
+    if opts.comment:
+        cmdline += [f'# {opts.comment}']
     if opts.dry_run:
         print(*map(shlex.quote, cmdline))
     else:
