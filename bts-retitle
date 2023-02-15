@@ -8,6 +8,7 @@ import logging
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 
 import debianbts
@@ -21,7 +22,11 @@ def main():
     ap.add_argument('no', metavar='NO', type=int)
     opts = ap.parse_args()
     logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
-    [bug] = debianbts.get_status(opts.no)
+    bugs = debianbts.get_status(opts.no)
+    if not bugs:
+        print(f'{ap.prog}: bug #{opts.no} not found', file=sys.stderr)
+        sys.exit(1)
+    [bug] = bugs
     with tempfile.TemporaryDirectory(prefix='bts-retitle.') as tmpdir:
         path = f'{tmpdir}/{opts.no}.txt'
         with open(path, 'w') as file:
