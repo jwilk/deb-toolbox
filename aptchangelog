@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Copyright © 2023 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+set -e -u
+opts=(
+    -o Acquire::Changelogs::AlwaysOnline::Origin::Debian=true
+    -o Acquire::http::Proxy::metadata.ftp-master.debian.org=DIRECT
+)
+exec apt changelog "${opts[@]}" "$@"
+
+# vim:ts=4 sts=4 sw=4 et
