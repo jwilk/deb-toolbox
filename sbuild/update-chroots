@@ -12,8 +12,8 @@ do
         grep -Fw archive.debian.org /etc/apt/sources.list > /dev/null && exit
         apt-get update &&
         apt-get dist-upgrade --auto-remove -y &&
-        apt-get clean
-        rm -f /etc/passwd /etc/shadow
+        apt-get clean &&
+        rm -f /etc/passwd /etc/shadow &&
         rm -f /etc/group /etc/gshadow
     "
 done
