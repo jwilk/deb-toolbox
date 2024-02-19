@@ -30,14 +30,27 @@ class xdg():
     if not os.path.isabs(cache_home):
         cache_home = os.path.join(os.path.expanduser('~'), '.cache')
 
+def makedirs700(path):
+    # TODO: Get rid of this function once
+    # https://github.com/python/cpython/issues/86533
+    # ("Restore os.makedirs ability to apply mode to all directories created")
+    # is fixed.
+    if os.path.isdir(path):
+        return
+    head, tail = os.path.split(path)
+    if head:
+        makedirs700(head)
+    try:
+        os.mkdir(path, 0o700)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+
 def get_cache_filename(mkdir=True):
     home = xdg.cache_home
     path = os.path.join(home, 'debian')
     if mkdir:
-        try:
-            os.makedirs(path)
-        except OSError:
-            pass
+        makedirs700(path)
     return os.path.join(path, 'apt-file.kch')
 
 class AcquireProgress(apt.progress.text.AcquireProgress):
