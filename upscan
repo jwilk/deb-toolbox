@@ -82,10 +82,7 @@ if extension is None:
     extension = 'tar.gz'
 
 target = f'{package}_{upstream_version}.orig.{extension}'
-try:
-    os.makedirs(options.target_directory)
-except OSError:
-    pass
+os.makedirs(options.target_directory, exist_ok=True)
 target = os.path.join(options.target_directory, target)
 logging.debug(f'{upstream_url} --> {target}')
 if os.path.exists(target) and os.path.getsize(target) > 0:
