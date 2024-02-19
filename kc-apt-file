@@ -185,7 +185,7 @@ class default:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--cache-file',
+    parser.add_argument('--cache-file', metavar='FILE',
         help=f'use this cache file (default: {get_cache_filename(mkdir=False)})'
     )
     subparsers = parser.add_subparsers(dest='command')
