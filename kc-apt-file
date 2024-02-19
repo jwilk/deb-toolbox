@@ -183,10 +183,17 @@ class default:
     architecture = default_architecture()
     sections = ['main', 'contrib', 'non-free']
 
+def unexpand_tilde(path):
+    home = os.path.expanduser('~/')
+    if path.startswith(home):
+        path = '~/' + path[len(home):]
+    return path
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    cache_filename = get_cache_filename(mkdir=False)
     parser.add_argument('--cache-file', metavar='FILE',
-        help=f'use this cache file (default: {get_cache_filename(mkdir=False)})'
+        help=f'use this cache file (default: {unexpand_tilde(cache_filename)})'
     )
     subparsers = parser.add_subparsers(dest='command')
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
