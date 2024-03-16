@@ -40,7 +40,7 @@ def main():
     commandline = []
     if any(t.startswith('binary') for t in options.targets):
         commandline += ['fakeroot']
-    commandline += ['debian/rules'] + options.targets
+    commandline += ['debian/rules', *options.targets]
     print('$', *commandline)
     os.execvp(commandline[0], commandline)
 
