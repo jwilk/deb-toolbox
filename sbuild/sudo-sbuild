@@ -32,12 +32,12 @@ try:
     os.chdir(tmpdir)
     for filename in glob.iglob('*'):
         os.chmod(filename, 0o644)
-    ipc.check_call(['setfacl', '-m', 'u:sbuild:rw', '--'] + glob.glob('*'))
+    ipc.check_call(['setfacl', '-m', 'u:sbuild:rw', '--', *glob.glob('*')])
     ipc.check_call(['ls', '-lR'])
     try:
         ipc.check_call(sbuild_args)
     finally:
-        ipc.check_call(['cp', '-v', '-L', '-f', '-t', cwd, '--'] + glob.glob('*'))
+        ipc.check_call(['cp', '-v', '-L', '-f', '-t', cwd, '--', *glob.glob('*')])
 except ipc.CalledProcessError as ex:
     print('E:', ' '.join(map(shlex.quote, ex.cmd)))
     sys.exit(1)
