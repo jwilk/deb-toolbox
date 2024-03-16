@@ -67,7 +67,7 @@ def main():
         if build_id is None:
             raise ValueError(f'cannot determine build-id: {path}')
         interesting_build_ids.add(build_id)
-    with ipc.Popen(['dpkg', '-S'] + paths, stdout=ipc.PIPE) as dpkg:
+    with ipc.Popen(['dpkg', '-S', *paths], stdout=ipc.PIPE) as dpkg:
         source_map, binary_map = get_maps()
         packages = set()
         for line in dpkg.stdout:
@@ -78,7 +78,7 @@ def main():
                 packages |= source_map[binary_map[p]]
     if dpkg.wait() != 0:
         raise DpkgError
-    with ipc.Popen(['dpkg', '-L'] + list(packages), stdout=ipc.PIPE) as dpkg:
+    with ipc.Popen(['dpkg', '-L', *packages], stdout=ipc.PIPE) as dpkg:
         for line in dpkg.stdout:
             assert line[-1] == b'\n'[0]
             path = line[:-1]
