@@ -25,7 +25,7 @@ import apt_pkg
 
 import kyotocabinet as kc
 
-class xdg():
+class xdg:
     cache_home = os.environ.get('XDG_CACHE_HOME') or ''
     if not os.path.isabs(cache_home):
         cache_home = os.path.join(os.path.expanduser('~'), '.cache')
@@ -167,7 +167,7 @@ def do_search(options):
     finally:
         db.close()
 
-class default_architecture():
+class default_architecture:
 
     def __init__(self):
         self._cache = None
