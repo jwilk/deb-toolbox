@@ -46,7 +46,7 @@ def makedirs700(path):
         if not os.path.isdir(path):
             raise
 
-def get_cache_filename(mkdir=True):
+def get_cache_filename(*, mkdir=True):
     home = xdg.cache_home
     path = os.path.join(home, 'debian')
     if mkdir:
@@ -125,7 +125,7 @@ def do_update(options):
     finally:
         db.close()
 
-def strings_to_regexp(strings, regexp=False, whole=True):
+def strings_to_regexp(strings, *, regexp=False, whole=True):
     if regexp:
         result = '|'.join(strings)
     else:
@@ -136,7 +136,7 @@ def strings_to_regexp(strings, regexp=False, whole=True):
     return re.compile(result)
 
 def do_list(options):
-    regexp = strings_to_regexp(options.packages, options.regexp)
+    regexp = strings_to_regexp(options.packages, regexp=options.regexp)
     matching = re.compile(regexp).search
     db = kc.DB()
     db.open(options.cache_file, db.OREADER)
@@ -152,7 +152,7 @@ def do_list(options):
         db.close()
 
 def do_search(options):
-    regexp = strings_to_regexp(options.terms, options.regexp, whole=False)
+    regexp = strings_to_regexp(options.terms, regexp=options.regexp, whole=False)
     matching = re.compile(regexp).search
     db = kc.DB()
     db.open(options.cache_file, db.OREADER)
