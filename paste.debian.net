@@ -24,6 +24,7 @@ class PasteServer(xmlrpc.client.ServerProxy):
         return response
 
 def do_get_languages(server, options):
+    del options
     response = server.call('getLanguages')
     for language in sorted(response['langs']):
         print(language)
