@@ -193,15 +193,15 @@ class convert_deferred(converter):
         return 'https://ftp-master.debian.org/deferred/'
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--type', choices=('new', 'deferred'), required=True,
+    ap = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--type', choices=('new', 'deferred'), required=True,
         metavar='TYPE', help='status file type to parse: new[1] or deferred[2]'
     )
-    parser.epilog = textwrap.dedent('''
+    ap.epilog = textwrap.dedent('''
         [1] https://ftp-master.debian.org/new.822
         [2] https://ftp-master.debian.org/deferred/status
     ''')
-    options = parser.parse_args()
+    options = ap.parse_args()
     converter = globals()[f'convert_{options.type}']()
     return converter()
 
