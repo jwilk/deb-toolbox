@@ -10,6 +10,7 @@ https://ftp-master.debian.org/new.822
 https://ftp-master.debian.org/deferred/status
 '''
 
+import abc
 import argparse
 import datetime
 import email.utils
@@ -53,25 +54,30 @@ def fix_email(email):
 def read_tag_file(file):
     return apt_pkg.TagFile(file)
 
-class converter:
+class converter(metaclass=abc.ABCMeta):
 
+    @abc.abstractmethod
     def get_title(self):
-        raise NotImplementedError
+        pass
 
+    @abc.abstractmethod
     def get_self_uri(self):
-        raise NotImplementedError
+        pass
 
     def get_extra_uris(self):
         return ()
 
+    @abc.abstractmethod
     def get_entry_uri(self, para):
-        return None
+        pass
 
+    @abc.abstractmethod
     def get_entry_timestamp(self, para):
-        raise NotImplementedError
+        pass
 
+    @abc.abstractmethod
     def get_changes_base_uri(self):
-        raise NotImplementedError
+        pass
 
     def __call__(self):
         feed = etree.Element('feed', nsmap={None: ns_atom})
