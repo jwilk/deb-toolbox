@@ -37,5 +37,27 @@ jobs:
       run: |
         python3 -m pip install pyflakes
         python3 -m pyflakes .
+    - name: install lxml
+      run: |
+        python3 -m pip install lxml
+    - name: set up APT
+      run: |
+        printf 'Apt::Install-Recommends "false";\n' | sudo tee -a /etc/apt/apt.conf
+        sudo apt-get update
+    - name: install libxml2-utils
+      run: |
+        sudo apt-get install -y libxml2-utils
+    - name: test 822-to-atom --type new
+      run: |
+        wget -O new.822 https://ftp-master.debian.org/new.822
+        ./822-to-atom --type new < new.822 > new.atom
+        xmllint new.atom > /dev/null
+        rm new.822 new.atom
+    - name: test 822-to-atom --type deferred
+      run: |
+        wget -O deferred.822 https://ftp-master.debian.org/deferred/status
+        ./822-to-atom --type deferred < deferred.822 > deferred.atom
+        xmllint deferred.atom > /dev/null
+        rm deferred.822 deferred.atom
 
 # vim:ts=2 sts=2 sw=2 et
