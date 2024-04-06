@@ -6,8 +6,9 @@
 '''
 Convert some 822 files hosted on ftp-master to the Atom syndication format.
 
-https://ftp-master.debian.org/new.822
-https://ftp-master.debian.org/deferred/status
+Supported files:
+* https://ftp-master.debian.org/new.822
+* https://ftp-master.debian.org/deferred/status
 '''
 
 import abc
