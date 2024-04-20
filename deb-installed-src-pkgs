@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Copyright © 2024 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+set -e -u
+set -o pipefail
+
+dpkg-query -Wf '${source:Package}\t${Status}\n' \
+| grep 'installed$' \
+| cut -f 1 \
+| sort -u
+
+# vim:ts=4 sts=4 sw=4 et
