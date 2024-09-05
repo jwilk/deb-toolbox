@@ -6,6 +6,9 @@
 import argparse
 import logging
 import re
+import sys
+
+sys.modules['setuptools'] = None
 
 import debianbts
 

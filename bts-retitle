@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 
+sys.modules['setuptools'] = None
+
 import debianbts
 
 0_0  # Python >= 3.6 is required
