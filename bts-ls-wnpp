@@ -27,6 +27,7 @@ def main():
     for i in range(0, len(bugs), batch_size):
         chunk = bugs[i:(i + batch_size)]
         chunk = debianbts.get_status(chunk)
+        chunk.sort(key=(lambda bug: bug.bug_num), reverse=True)
         for bug in chunk:
             assert not bug.archived
             if options.bad_subject and check_subject(bug.subject):
