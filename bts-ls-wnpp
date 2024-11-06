@@ -23,7 +23,7 @@ def main():
     logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
     bugs = debianbts.get_bugs(package='wnpp')
     bugs.sort(reverse=True)
-    batch_size = 100
+    batch_size = 1000
     for i in range(0, len(bugs), batch_size):
         chunk = bugs[i:(i + batch_size)]
         chunk = debianbts.get_status(chunk)
