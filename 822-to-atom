@@ -56,7 +56,7 @@ def fix_email(email):
 def read_tag_file(file):
     return apt_pkg.TagFile(file)
 
-class converter(metaclass=abc.ABCMeta):
+class converter(abc.ABC):
 
     @abc.abstractmethod
     def get_title(self):
