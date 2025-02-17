@@ -16,6 +16,7 @@ binmode STDOUT, ':encoding(UTF-8)';
 # FIXME: don't hardcode UTF-8, but honour locale charset
 
 my $ua = LWP::UserAgent->new;
+$ua->agent('');
 $ua->env_proxy;
 
 sub http_get
