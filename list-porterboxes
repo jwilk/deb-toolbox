@@ -9,6 +9,8 @@ import collections
 
 import ldap3
 
+...  # Python 3 is required
+
 exceptions = set()
 
 def get_porterboxes():
