@@ -20,6 +20,7 @@ check_subject = re.compile(r'(O|RFA|RFH|ITA|ITP|RFP): [a-z0-9][a-z0-9+.-]+ -- \S
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--bad-subject', action='store_true')
+    ap.add_argument('--trim', action='store_true', help='strip trailing whitespace from bug subjects')
     options = ap.parse_args()
     logging.getLogger('pysimplesoap.simplexml').setLevel(logging.CRITICAL)
     bugs = debianbts.get_bugs(package='wnpp')
@@ -31,11 +32,14 @@ def main():
         chunk.sort(key=(lambda bug: bug.bug_num), reverse=True)
         for bug in chunk:
             assert not bug.archived
-            if options.bad_subject and check_subject(bug.subject):
+            subject = bug.subject
+            if options.trim:
+                subject = subject.rstrip()
+            if options.bad_subject and check_subject(subject):
                 continue
             if any(n < bug.bug_num for n in bug.mergedwith):
                 continue
-            print(f'#{bug.bug_num} {bug.subject}')
+            print(f'#{bug.bug_num} {subject}')
 
 if __name__ == '__main__':
     main()
