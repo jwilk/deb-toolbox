@@ -1,0 +1,56 @@
+#!/usr/bin/python3
+# encoding=UTF-8
+
+# Copyright © 2025 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+'''
+reportbug(1) wrapper with:
+- UI modules disabled
+- XDG Base Directory support
+- "reportbug /path/to/src/pkg/" support
+- "reportbug /path/to/.dsc" support
+'''
+
+import os
+import sys
+
+int(0_0)  # Python >= 3.6 is required
+
+sys.modules['gi'] = None
+sys.modules['urwid'] = None
+
+import reportbug.utils
+xdg_config_home = os.environ.get('XDG_CONFIG_HOME', '')
+if xdg_config_home[:1] != '/':
+    xdg_config_home = os.path.expanduser('~/.config')
+reportbug.utils.USERFILE = f'{xdg_config_home}/reportbug/reportbugrc'
+reportbug.utils.FILES = (reportbug.utils.FILES[0], reportbug.utils.USERFILE)
+
+arg = name = version = None
+for i in range(1, len(sys.argv)):
+    arg = sys.argv[i]
+    if not os.path.exists(arg):
+        continue
+    if arg.endswith('.dsc'):
+        name, version = arg.split('_', 2)[:2]
+        version = version[:-4]
+    elif os.path.isdir(arg):
+        path = os.path.join(arg, 'debian/changelog')
+        if not os.path.exists(path):
+            continue
+        with open(path) as f:
+            name, version = f.readline().split(' ', 2)[:2]
+            version = version.strip('()')
+        del f
+    else:
+        continue
+    sys.argv[i] = '--from-buildd=%s_%s' % (name, version)
+del arg, name, version
+
+reportbug_exe = '/usr/bin/reportbug'
+with open(reportbug_exe, encoding='UTF-8') as file:
+    reportbug_src = file.read()
+exec(compile(reportbug_src, reportbug_exe, 'exec'))
+
+# vim:ts=4 sts=4 sw=4 et

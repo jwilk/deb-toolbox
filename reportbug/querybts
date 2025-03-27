@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+# encoding=UTF-8
+
+# Copyright © 2025 Jakub Wilk <jwilk@jwilk.net>
+# SPDX-License-Identifier: MIT
+
+'''
+querybts(1) wrapper
+with UI modules disabled
+'''
+
+import sys
+
+...  # Python 3 is required
+
+sys.modules['gi'] = None
+sys.modules['urwid'] = None
+
+querybts_exe = '/usr/bin/querybts'
+with open(querybts_exe, encoding='UTF-8') as file:
+    querybts_src = file.read()
+exec(compile(querybts_src, querybts_exe, 'exec'))
+
+# vim:ts=4 sts=4 sw=4 et
