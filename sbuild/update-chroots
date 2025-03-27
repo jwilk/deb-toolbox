@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 cd /
-chroots=$(schroot --all-source-chroots -i | sed -n -e '/  Name */s//source:/p')
+chroots=$(schroot --all-source-chroots --exclude-aliases -l)
 set -x
 for chroot in $chroots
 do
