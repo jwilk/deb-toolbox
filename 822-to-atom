@@ -182,10 +182,7 @@ class convert_deferred(converter):
         yield 'text/plain', 'https://ftp-master.debian.org/deferred/status'
 
     def get_entry_timestamp(self, para):
-        timetuple = email.utils.parsedate_tz(para['Date'])
-        timestamp = datetime.datetime(*timetuple[:7])
-        timestamp -= datetime.timedelta(seconds=timetuple[9])
-        return timestamp
+        return email.utils.parsedate_to_datetime(para['Date'])
 
     def get_entry_uri(self, para):
         base_uri = self.get_changes_base_uri()
