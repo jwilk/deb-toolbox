@@ -30,8 +30,7 @@ ns_atom = 'http://www.w3.org/2005/Atom'
 ns_xhtml = 'http://www.w3.org/1999/xhtml'
 
 def rfc3339(date):
-    date = date.replace(microsecond=0)
-    return str(date).replace(' ', 'T')
+    return date.isoformat(timespec='seconds')
 
 def elem(parent, name, tail='\n', nsmap=None, **attrib):
     if parent.text is None:
