@@ -92,7 +92,7 @@ class converter(abc.ABC):
         for media_type, alternate_uri in self.get_alternate_uris():
             elem(feed, 'link', rel='alternate', type=media_type, href=alternate_uri)
         e_updated = elem(feed, 'updated')
-        e_updated.text = rfc3339(datetime.datetime.utcnow())
+        e_updated.text = rfc3339(datetime.datetime.now(datetime.timezone.utc))
         e_updated.tail += '\n'
         for para in read_tag_file(sys.stdin):
             uri = self.get_entry_uri(para)
@@ -160,8 +160,9 @@ class convert_new(converter):
         return f'https://ftp-master.debian.org/new/{source}_{version}.html'
 
     def get_entry_timestamp(self, para):
-        return datetime.datetime.utcfromtimestamp(
-            int(para['Last-Modified'])
+        return datetime.datetime.fromtimestamp(
+            int(para['Last-Modified']),
+            datetime.timezone.utc
         )
 
     def get_changes_base_uri(self):
