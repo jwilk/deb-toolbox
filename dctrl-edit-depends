@@ -33,7 +33,7 @@ def do_edit(options):
         recommends = []
     new_depends = []
     r_alternative = str.join('|', (re.escape(x) for x in options.demote))
-    demote_regex = re.compile(f'^({r_alternative})( .*)$')
+    demote_regex = re.compile(f'^({r_alternative})( .*)?$')
     for depends in depends:
         if demote_regex.match(depends):
             recommends += [depends]
