@@ -39,7 +39,7 @@ def do_edit(options):
             recommends += [depends]
         else:
             new_depends += [depends]
-    new_depends = ', '.join(new_depends)
+    new_depends = str.join(', ', new_depends)
     if options.fix_version is not None:
         para_version = para['Version']
         new_depends = new_depends.replace(
