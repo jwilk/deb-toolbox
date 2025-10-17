@@ -46,7 +46,7 @@ def do_edit(options):
             f'(= {para_version})',
             f'(= {options.fix_version})',
         )
-    recommends = ', '.join(recommends)
+    recommends = str.join(', ', recommends)
     options.ctrlfile.seek(0)
     options.ctrlfile.truncate()
     sys.stdout = options.ctrlfile
