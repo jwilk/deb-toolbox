@@ -197,6 +197,7 @@ def main():
         help=f'use this cache file (default: {unexpand_tilde(cache_filename)})'
     )
     subparsers = parser.add_subparsers(dest='command')
+    subparsers.required = True  # https://bugs.python.org/issue9253
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
     cmd_update.add_argument('-m', '--mirror', default=default.mirror,
         help=f'Debian mirror to use (default: {default.mirror})'
