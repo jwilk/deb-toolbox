@@ -128,7 +128,7 @@ def do_update(options):
 
 def strings_to_regexp(strings, *, regexp=False, whole=True):
     if regexp:
-        result = '|'.join(strings)
+        result = str.join('|', strings)
     else:
         r_strings = str.join('|', map(re.escape, strings))
         result = f'(?:{r_strings})'
