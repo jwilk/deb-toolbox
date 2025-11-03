@@ -121,7 +121,7 @@ def do_update(options):
     db.open(options.cache_file, db.OWRITER | db.OCREATE | db.OTRUNCATE)
     try:
         for package, filenames in data.items():
-            db[package] = zlib.compress(b'\n'.join(filenames), 1)
+            db[package] = zlib.compress(bytes.join(b'\n', filenames), 1)
             filenames[:] = []
     finally:
         db.close()
