@@ -14,13 +14,18 @@ import urllib.request
 
 0_0  # Python >= 3.6 is required
 
-def do_get_languages(options):
-    raise NotImplementedError
-
 user_agent = urllib.request.build_opener()
 user_agent.addheaders[:] = [
     ('Content-Type', 'application/json; charset=UTF-8'),
 ]
+
+def do_get_languages(options):
+    url = urllib.parse.urljoin(options.server, '/api/v1/langs')
+    request = urllib.request.Request(url)
+    response = user_agent.open(request)
+    data = json.load(response)
+    for lang in sorted(d['code'] for d in data):
+        print(lang)
 
 def do_create_paste(options):
     text = options.text
