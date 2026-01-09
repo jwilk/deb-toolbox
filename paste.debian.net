@@ -6,39 +6,39 @@
 
 import argparse
 import getpass
+import json
 import re
 import sys
 import urllib.parse
-import xmlrpc.client
+import urllib.request
 
 0_0  # Python >= 3.6 is required
 
-class PasteError(RuntimeError):
-    pass
+def do_get_languages(options):
+    raise NotImplementedError
 
-class PasteServer(xmlrpc.client.ServerProxy):
+user_agent = urllib.request.build_opener()
+user_agent.addheaders[:] = [
+    ('Content-Type', 'application/json; charset=UTF-8'),
+]
 
-    def call(self, method, *args):
-        response = getattr(self.paste, method)(*args)
-        if response['rc'] != 0:
-            raise PasteError(response['statusmessage'])
-        return response
-
-def do_get_languages(server, options):
-    del options
-    response = server.call('getLanguages')
-    for language in sorted(response['langs']):
-        print(language)
-
-def do_create_paste(server, options):
+def do_create_paste(options):
     text = options.text
     if text is None:
         text = sys.stdin.read()
-    text = text.encode('UTF-8').decode('ISO-8859-1')  # FIXME
-    response = server.call('addPaste', text, options.username, options.expire, options.language, int(not options.public))
-    view_url = response['view_url']
-    view_url = urllib.parse.urljoin(options.url, view_url)
-    print(view_url)
+    data = dict(
+        code=text,
+        poster=options.username,
+        expire=options.expire,
+    )
+    if options.language:
+        data.update(lang=options.language)
+    data = json.dumps(data, ensure_ascii=False).encode('UTF-8')
+    url = urllib.parse.urljoin(options.server, '/api/v1/paste')
+    request = urllib.request.Request(url, data=data)
+    response = user_agent.open(request)
+    data = json.load(response)
+    print(data['url'])
 
 def parse_time_delta(s):
     item_re = '[0-9]+[smhd]'
@@ -58,23 +58,24 @@ def parse_time_delta(s):
 parse_time_delta.__name__ = 'time'
 
 def main():
-    default_server = 'https://paste.debian.net/server.pl'
+    default_server = 'https://paste.debian.net/'
     default_username = getpass.getuser()
     default_expire = parse_time_delta('48h')
     parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--server', metavar='URL', dest='url', default=default_server, help=f'XML-RPC server (default: {default_server})')
+    parser.add_argument('-S', '--server', metavar='URL', default=default_server, help=f'paste server (default: {default_server})')
     parser.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
     parser.add_argument('-l', '--language', default='text', help='highlighting language')
     parser.add_argument('-e', '--expire', type=parse_time_delta, default=default_expire, help=f'when the entry should expire (default: {default_expire // (60 * 60)}h)')
-    parser.add_argument('--public', action='store_true', help='make the paste public')
+    parser.add_argument('--public', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
     parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
     options = parser.parse_args()
-    server = PasteServer(options.url)
+    if options.public:
+        raise NotImplementedError
     if options.list_languages:
-        do_get_languages(server, options)
+        do_get_languages(options)
     else:
-        do_create_paste(server, options)
+        do_create_paste(options)
 
 if __name__ == '__main__':
     main()
