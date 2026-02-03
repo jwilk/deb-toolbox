@@ -62,11 +62,11 @@ def do_edit(options):
 
 def main():
     apt_pkg.init()
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--demote', metavar='LIBRARY', action='append', default=[])
-    parser.add_argument('--fix-version', metavar='VERSION')
-    parser.add_argument('ctrlfile', metavar='CONTROL-FILE', type=argparse.FileType('r+'))
-    options = parser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--demote', metavar='LIBRARY', action='append', default=[])
+    ap.add_argument('--fix-version', metavar='VERSION')
+    ap.add_argument('ctrlfile', metavar='CONTROL-FILE', type=argparse.FileType('r+'))
+    options = ap.parse_args()
     do_edit(options)
 
 if __name__ == '__main__':
