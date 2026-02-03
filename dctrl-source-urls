@@ -47,11 +47,11 @@ def print_urls(mirror, indices, hashfn=None):
                     print(output_format.format(directory=directory, filename=filename, hash=hashsum))
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mirror', default=default_mirror, help=f'mirror to download files from (default: {default_mirror})')
-    parser.add_argument('--hash', choices=('md5', 'sha1', 'sha256'), help='output checksum')
-    parser.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
-    options = parser.parse_args()
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--mirror', default=default_mirror, help=f'mirror to download files from (default: {default_mirror})')
+    ap.add_argument('--hash', choices=('md5', 'sha1', 'sha256'), help='output checksum')
+    ap.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
+    options = ap.parse_args()
     print_urls(options.mirror, options.indices, options.hash)
 
 if __name__ == '__main__':
