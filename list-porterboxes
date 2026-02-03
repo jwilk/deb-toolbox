@@ -41,11 +41,11 @@ def get_porterboxes():
     return results
 
 def main():
-    oparser = argparse.ArgumentParser()
-    oparser.add_argument('-u', '--unique', action='store_true')
-    oparser.add_argument('--dns', action='store_true')
-    oparser.add_argument('architecture', metavar='ARCHITECTURE', nargs='?')
-    options = oparser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-u', '--unique', action='store_true')
+    ap.add_argument('--dns', action='store_true')
+    ap.add_argument('architecture', metavar='ARCHITECTURE', nargs='?')
+    options = ap.parse_args()
     if options.dns:
         options.unique = True
     porterboxes = get_porterboxes()
