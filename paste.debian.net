@@ -67,6 +67,7 @@ def main():
     default_username = getpass.getuser()
     default_expire = parse_time_delta('48h')
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('-S', '--server', metavar='URL', default=default_server, help=f'paste server (default: {default_server})')
     ap.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
     ap.add_argument('-l', '--language', default='text', help='highlighting language')
