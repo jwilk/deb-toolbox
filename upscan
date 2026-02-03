@@ -39,6 +39,7 @@ def find_extension(filename):
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 ap = argparse.ArgumentParser()
+ap.color = False
 ap.add_argument('-F', '--file', default='debian/watch', help='use this watch file')
 ap.add_argument('-t', '--target-directory', default='.', help='download files to this directory')
 ap.add_argument('--svn', action='store_const', const='../tarballs/', dest='target_directory', help='alias for "--target-directory ../tarballs/"')
