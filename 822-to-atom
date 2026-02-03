@@ -193,6 +193,7 @@ class convert_deferred(converter):
 
 def main():
     ap = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.color = False
     ap.add_argument('--type', choices=('new', 'deferred'), required=True,
         metavar='TYPE', help='status file type to parse: new[1] or deferred[2]'
     )
