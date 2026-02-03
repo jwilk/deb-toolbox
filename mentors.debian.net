@@ -129,8 +129,8 @@ def do_upgrade(options):
 
 def main():
     apt_pkg.init()
-    parser = ArgumentParser()
-    options = parser.parse_args()
+    ap = ArgumentParser()
+    options = ap.parse_args()
     return options.action(options)
 
 if __name__ == '__main__':
