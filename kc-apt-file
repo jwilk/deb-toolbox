@@ -191,12 +191,12 @@ def unexpand_tilde(path):
     return path
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    ap = argparse.ArgumentParser(description=__doc__)
     cache_filename = get_cache_filename(mkdir=False)
-    parser.add_argument('--cache-file', metavar='FILE',
+    ap.add_argument('--cache-file', metavar='FILE',
         help=f'use this cache file (default: {unexpand_tilde(cache_filename)})'
     )
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = ap.add_subparsers(dest='command')
     subparsers.required = True  # https://bugs.python.org/issue9253
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
     cmd_update.add_argument('-m', '--mirror', default=default.mirror,
@@ -219,7 +219,7 @@ def main():
     cmd_search = subparsers.add_parser('search', help='search for file(s)')
     cmd_search.add_argument('terms', metavar='TERM', nargs='+')
     cmd_search.add_argument('-E', '--regexp', action='store_true')
-    options = parser.parse_args()
+    options = ap.parse_args()
     if options.cache_file is None:
         options.cache_file = get_cache_filename()
     command = options.command
