@@ -16,6 +16,7 @@ import sys
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('--nocheck', action='store_true')
     ap.add_argument('--noopt', action='store_true')
     ap.add_argument('--nostrip', action='store_true')
