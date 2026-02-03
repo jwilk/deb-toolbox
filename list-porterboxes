@@ -42,6 +42,7 @@ def get_porterboxes():
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('-u', '--unique', action='store_true')
     ap.add_argument('--dns', action='store_true')
     ap.add_argument('architecture', metavar='ARCHITECTURE', nargs='?')
