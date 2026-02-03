@@ -77,6 +77,7 @@ def download_changes(source, version=None):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('source', metavar='SOURCE')
     ap.add_argument('version', metavar='VERSION', nargs='?')
     options = ap.parse_args()
