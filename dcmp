@@ -10,6 +10,7 @@ import debian.debian_support as deb
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('v1', metavar='VER1')
     ap.add_argument('v2', metavar='VER2')
     opt = ap.parse_args()
