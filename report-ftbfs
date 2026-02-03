@@ -180,15 +180,15 @@ def validate_python_version(v):
 validate_python_version.__name__ = 'python version'
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--arch-specific', action='store_true')
-    parser.add_argument('-m', '--mutt', action='store_const', const='mutt', dest='mutt')
-    parser.add_argument('-M', '--neomutt', action='store_const', const='neomutt', dest='mutt')
-    group = parser.add_mutually_exclusive_group()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-a', '--arch-specific', action='store_true')
+    ap.add_argument('-m', '--mutt', action='store_const', const='mutt', dest='mutt')
+    ap.add_argument('-M', '--neomutt', action='store_const', const='neomutt', dest='mutt')
+    group = ap.add_mutually_exclusive_group()
     group.add_argument('--qa-doublebuild', action='store_true')
     group.add_argument('--python', type=validate_python_version)
-    parser.add_argument('logname', metavar='LOGFILE')
-    options = parser.parse_args()
+    ap.add_argument('logname', metavar='LOGFILE')
+    options = ap.parse_args()
     main(options)
 
 # vim:ts=4 sts=4 sw=4 et
