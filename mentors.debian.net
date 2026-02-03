@@ -37,6 +37,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         argparse.ArgumentParser.__init__(self, *args, **kwargs)
         self.add_argument('--verbose', action='store_true')
+        self.color = False
         p_lookup = self.add_subparser('lookup')
         p_lookup.add_argument('pkgname', metavar='PKG-NAME[_VERSION]')
         p_checkout = self.add_subparser('checkout')
