@@ -19,6 +19,7 @@ check_subject = re.compile(r'(O|RFA|RFH|ITA|ITP|RFP): [a-z0-9][a-z0-9+.-]+ -- \S
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('--bad-subject', action='store_true')
     ap.add_argument('--trim', action='store_true', help='strip trailing whitespace from bug subjects')
     options = ap.parse_args()
