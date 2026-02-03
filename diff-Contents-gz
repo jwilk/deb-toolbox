@@ -62,6 +62,7 @@ def error(msg):
     sys.exit(1)
 
 ap = argparse.ArgumentParser()
+ap.color = False
 ap.add_argument('paths', metavar='PATH', nargs='+')
 opts = ap.parse_args()
 
