@@ -181,6 +181,7 @@ validate_python_version.__name__ = 'python version'
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('-a', '--arch-specific', action='store_true')
     ap.add_argument('-m', '--mutt', action='store_const', const='mutt', dest='mutt')
     ap.add_argument('-M', '--neomutt', action='store_const', const='neomutt', dest='mutt')
