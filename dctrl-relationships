@@ -46,6 +46,7 @@ def parse(file, options):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('--ignore-versions', action='store_true')
     ap.set_defaults(alternatives=alt_all)
     ap.add_argument('--every-alternative', action='store_const', const=alt_every, dest='alternatives')
