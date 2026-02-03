@@ -38,17 +38,17 @@ def find_extension(filename):
 
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument('-F', '--file', default='debian/watch', help='use this watch file')
-argparser.add_argument('-t', '--target-directory', default='.', help='download files to this directory')
-argparser.add_argument('--svn', action='store_const', const='../tarballs/', dest='target_directory', help='alias for "--target-directory ../tarballs/"')
-argparser.add_argument('-r', '--repack-to', nargs='+', metavar='EXT', default=[], help='repack to .orig.tar to the one of the specified file formats')
-argparser.add_argument('-f', '--force', action='store_true', help='overwrite an existing .orig.tar')
-argparser.add_argument('-v', '--version', help='download this version')
-argparser.add_argument('-c', '--current-version', action='store_true', help='download current version')
-argparser.add_argument('--insecure', '--no-check-certificate', action='store_true', help='''don't validate the server's certificate''')
-argparser.add_argument('-n', '--no-act', '--dry-run', action='store_true', help='''don't do anything''')
-options = argparser.parse_args()
+ap = argparse.ArgumentParser()
+ap.add_argument('-F', '--file', default='debian/watch', help='use this watch file')
+ap.add_argument('-t', '--target-directory', default='.', help='download files to this directory')
+ap.add_argument('--svn', action='store_const', const='../tarballs/', dest='target_directory', help='alias for "--target-directory ../tarballs/"')
+ap.add_argument('-r', '--repack-to', nargs='+', metavar='EXT', default=[], help='repack to .orig.tar to the one of the specified file formats')
+ap.add_argument('-f', '--force', action='store_true', help='overwrite an existing .orig.tar')
+ap.add_argument('-v', '--version', help='download this version')
+ap.add_argument('-c', '--current-version', action='store_true', help='download current version')
+ap.add_argument('--insecure', '--no-check-certificate', action='store_true', help='''don't validate the server's certificate''')
+ap.add_argument('-n', '--no-act', '--dry-run', action='store_true', help='''don't do anything''')
+options = ap.parse_args()
 
 if options.repack_to:
     raise NotImplementedError('--repack-to is not yet implemented')
