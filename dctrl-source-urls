@@ -48,6 +48,7 @@ def print_urls(mirror, indices, hashfn=None):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.color = False
     ap.add_argument('--mirror', default=default_mirror, help=f'mirror to download files from (default: {default_mirror})')
     ap.add_argument('--hash', choices=('md5', 'sha1', 'sha256'), help='output checksum')
     ap.add_argument('indices', metavar='SOURCES_FILE', nargs='+', help='a Sources file')
