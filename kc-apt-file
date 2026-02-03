@@ -192,6 +192,7 @@ def unexpand_tilde(path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.color = False
     cache_filename = get_cache_filename(mkdir=False)
     ap.add_argument('--cache-file', metavar='FILE',
         help=f'use this cache file (default: {unexpand_tilde(cache_filename)})'
