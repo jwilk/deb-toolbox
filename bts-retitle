@@ -20,6 +20,7 @@ import debianbts
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('-n', '--dry-run', action='store_true')
     ap.add_argument('-c', '--comment')
     ap.add_argument('no', metavar='NO', type=int)
