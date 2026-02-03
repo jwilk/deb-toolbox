@@ -76,10 +76,10 @@ def download_changes(source, version=None):
         download_file(item)
 
 def main():
-    oparser = argparse.ArgumentParser()
-    oparser.add_argument('source', metavar='SOURCE')
-    oparser.add_argument('version', metavar='VERSION', nargs='?')
-    options = oparser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('source', metavar='SOURCE')
+    ap.add_argument('version', metavar='VERSION', nargs='?')
+    options = ap.parse_args()
     download_changes(options.source, options.version)
 
 if __name__ == '__main__':
