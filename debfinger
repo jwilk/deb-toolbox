@@ -12,6 +12,7 @@ import ldap3
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('users', metavar='USER', nargs='+')
     options = ap.parse_args()
     escape = ldap3.utils.conv.escape_filter_chars
