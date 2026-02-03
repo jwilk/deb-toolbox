@@ -66,14 +66,14 @@ def main():
     default_server = 'https://paste.debian.net/'
     default_username = getpass.getuser()
     default_expire = parse_time_delta('48h')
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--server', metavar='URL', default=default_server, help=f'paste server (default: {default_server})')
-    parser.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
-    parser.add_argument('-l', '--language', default='text', help='highlighting language')
-    parser.add_argument('-e', '--expire', type=parse_time_delta, default=default_expire, help=f'when the entry should expire (default: {default_expire // (60 * 60)}h)')
-    parser.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
-    parser.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
-    options = parser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-S', '--server', metavar='URL', default=default_server, help=f'paste server (default: {default_server})')
+    ap.add_argument('-u', '--username', default=default_username, help=f'name of the submitter (default: {default_username})')
+    ap.add_argument('-l', '--language', default='text', help='highlighting language')
+    ap.add_argument('-e', '--expire', type=parse_time_delta, default=default_expire, help=f'when the entry should expire (default: {default_expire // (60 * 60)}h)')
+    ap.add_argument('-L', '--list-languages', action='store_true', help='list all supported highlighting languages')
+    ap.add_argument('text', metavar='TEXT', nargs='?', help='text to paste (default: read text from stdin)')
+    options = ap.parse_args()
     if options.list_languages:
         do_get_languages(options)
     else:
