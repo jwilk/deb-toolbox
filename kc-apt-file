@@ -198,7 +198,7 @@ def main():
     ap.add_argument('--cache-file', metavar='FILE',
         help=f'use this cache file (default: {unexpand_tilde(cache_filename)})'
     )
-    subparsers = ap.add_subparsers(dest='command', required=True)
+    subparsers = ap.add_subparsers(dest='command', metavar='COMMAND', required=True)
     cmd_update = subparsers.add_parser('update', help='download indices from a Debian mirror')
     cmd_update.add_argument('-m', '--mirror', default=default.mirror,
         help=f'Debian mirror to use (default: {default.mirror})'
