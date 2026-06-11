@@ -15,7 +15,8 @@ import tempfile
 import apt
 import apt_pkg
 
-0_0  # Python >= 3.6 is required
+async def _(): f'{await "# Python >= 3.7 is required #"}'
+del _
 
 mentors_root = 'https://mentors.debian.net/debian'
 
